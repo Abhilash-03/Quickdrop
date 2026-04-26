@@ -20,6 +20,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "QuickDrop - Fast & Secure File Sharing",
   description: "Share files instantly with expiring links. Upload, share, and auto-delete - simple, fast, and secure.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
