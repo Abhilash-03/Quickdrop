@@ -35,5 +35,6 @@ export async function GET(
     expiresAt: link.expiresAt.toISOString(),
     downloadsRemaining,
     downloadLimit: link.downloadLimit,
+    previewUrl: link.file.secureUrl,
   })
 }

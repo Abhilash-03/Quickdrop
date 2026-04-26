@@ -12,13 +12,25 @@ import {
   FileImage,
   FileText,
   FileArchive,
-  Upload
+  Upload,
+  Eye
 } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface LinkInfo {
   filename: string
@@ -27,6 +39,7 @@ interface LinkInfo {
   expiresAt: string
   downloadsRemaining: number
   downloadLimit: number
+  previewUrl: string
 }
 
 type PageState = "loading" | "ready" | "expired" | "not-found" | "error"
@@ -102,10 +115,48 @@ export default function DownloadPage() {
     fetchLinkInfo()
   }, [code])
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    if (!linkInfo) return
+    
     setIsDownloading(true)
-    window.location.href = `/download/${code}`
+    try {
+      const response = await fetch(`/download/${code}`)
+      
+      if (!response.ok) {
+        throw new Error("Download failed")
+      }
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = linkInfo.filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      // Refresh link info to update downloads remaining
+      const res = await fetch(`/api/link/${code}`)
+      if (res.ok) {
+        const data = await res.json()
+        setLinkInfo(data)
+      }
+    } catch (error) {
+      console.error("Download error:", error)
+    } finally {
+      setIsDownloading(false)
+    }
   }
+
+  const handlePreview = () => {
+    if (linkInfo?.previewUrl) {
+      window.open(linkInfo.previewUrl, "_blank")
+    }
+  }
+
+  // Check if file type supports preview
+  const canPreview = linkInfo?.mime.startsWith("image/") || linkInfo?.mime === "application/pdf"
 
   const IconComponent = linkInfo ? getFileIcon(linkInfo.mime) : FileIcon
 
@@ -203,29 +254,65 @@ export default function DownloadPage() {
                   </Badge>
                 </div>
 
-                {/* Download button */}
-                <Button 
-                  className="w-full" 
-                  size="lg"
-                  onClick={handleDownload}
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Starting download...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4 mr-2" />
-                      Download File
-                    </>
+                {/* Action buttons */}
+                <div className="flex gap-3">
+                  {canPreview && (
+                    <Button 
+                      variant="outline"
+                      className="flex-1" 
+                      size="lg"
+                      onClick={handlePreview}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Preview
+                    </Button>
                   )}
-                </Button>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        className={canPreview ? "flex-1" : "w-full"}
+                        size="lg"
+                        disabled={isDownloading}
+                      >
+                        {isDownloading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Downloading...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                          </>
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Download</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will use 1 of {linkInfo.downloadsRemaining} remaining downloads. 
+                          Once you confirm, the download will count even if you cancel the save dialog.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDownload}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Download Now
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
 
                 {/* Info text */}
                 <p className="text-xs text-center text-muted-foreground">
-                  File will be automatically deleted when download limit is reached or link expires.
+                  {canPreview 
+                    ? "Preview doesn't count towards download limit. Use Preview to view the file first."
+                    : "File will be automatically deleted when download limit is reached or link expires."
+                  }
                 </p>
               </CardContent>
             </Card>

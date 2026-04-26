@@ -16,25 +16,53 @@ export async function GET(_: NextRequest, { params } : { params : Promise<{ code
         include: { file: true },
     })
 
-    if(!link || link.status !== "active") return NextResponse.redirect("/404");
+    if(!link || link.status !== "active") {
+        return NextResponse.redirect(new URL("/404", process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"));
+    }
 
     const now = new Date();
     if (link.expiresAt <= now) {
         await expireAndDelete(link);
-        return NextResponse.redirect("/link-expired");
+        return NextResponse.redirect(new URL("/link-expired", process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"));
     }
 
+    // Check download limit before incrementing
+    if (link.downloadCount >= link.downloadLimit) {
+        await expireAndDelete(link);
+        return NextResponse.redirect(new URL("/link-expired", process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"));
+    }
+
+    // Fetch file from Cloudinary
+    const fileResponse = await fetch(link.file.secureUrl);
+    if (!fileResponse.ok) {
+        return NextResponse.json({ error: "Failed to fetch file" }, { status: 500 });
+    }
+
+    // Increment download count
     const updated = await prisma.shareLink.update({
         where: { id: link.id },
         data: { downloadCount: { increment: 1 } },
     })
 
     if(updated.downloadCount >= updated.downloadLimit) {
-        await expireAndDelete(link);
+        // Schedule deletion (don't await to not block response)
+        expireAndDelete(link).catch(console.error);
     }
 
-    // Redirect user to cloudinary file (fast CDN)
-    return NextResponse.redirect(link.file.secureUrl, 302);
+    // Get file as array buffer and return with download headers
+    const fileBuffer = await fileResponse.arrayBuffer();
+    
+    // Sanitize filename for Content-Disposition header
+    const safeFilename = link.file.filename.replace(/[^\w\s.-]/g, '_');
+    
+    return new NextResponse(fileBuffer, {
+        headers: {
+            "Content-Type": link.file.mime || "application/octet-stream",
+            "Content-Disposition": `attachment; filename="${safeFilename}"`,
+            "Content-Length": String(fileBuffer.byteLength),
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+        },
+    });
 }
 
 interface LinkWithFile {
