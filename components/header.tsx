@@ -2,11 +2,18 @@
 
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
-import { Upload, LogOut, LayoutDashboard, User } from "lucide-react"
+import { Upload, LogOut, LayoutDashboard, User, History } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuthModal } from "@/lib/auth-modal-store"
+import { useUploadStore } from "@/lib/upload-store"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +25,7 @@ import {
 export function Header() {
   const { data: session, status } = useSession()
   const { openLogin } = useAuthModal()
+  const shareHistory = useUploadStore((state) => state.shareHistory)
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -29,7 +37,25 @@ export function Header() {
           <span className="text-xl font-bold">QuickDrop</span>
         </Link>
 
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" asChild className="relative">
+                  <Link href="/history">
+                    <History className="h-5 w-5" />
+                    {shareHistory.length > 0 && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-medium text-primary-foreground flex items-center justify-center">
+                        {shareHistory.length > 9 ? "9+" : shareHistory.length}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Share History</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
           <ThemeToggle />
           
           {status === "loading" ? (
