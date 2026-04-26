@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import {
-  User,
   Mail,
   Calendar,
   Upload,
@@ -21,12 +20,14 @@ import {
   Settings,
   ChevronRight,
   BadgeCheck,
+  TrendingUp,
+  Activity,
 } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useAuthModal } from "@/lib/auth-modal-store"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -92,41 +93,44 @@ function StatCard({
   icon: Icon, 
   label, 
   value, 
-  gradient,
+  color,
   delay = 0 
 }: { 
   icon: React.ElementType
   label: string
   value: number | string
-  gradient: string
+  color: string
   delay?: number
 }) {
   return (
     <motion.div
       variants={statCardVariants}
-      whileHover={{ scale: 1.05, y: -5 }}
+      whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
-      className="relative overflow-hidden"
     >
-      <Card className="border-0 shadow-lg">
-        <div className={`absolute inset-0 opacity-10 ${gradient}`} />
-        <CardContent className="p-6 relative">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">{label}</p>
-              <motion.p
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: delay + 0.3, type: "spring" }}
-                className="text-3xl font-bold"
-              >
-                {value}
-              </motion.p>
+      <Card className="group hover:shadow-lg transition-all duration-300 hover:border-primary/30 h-full">
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between mb-3">
+            <div className={`p-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100`}>
+              <Icon className={`h-5 w-5 text-zinc-300 dark:text-zinc-600`} />
             </div>
-            <div className={`p-3 rounded-xl ${gradient}`}>
-              <Icon className="h-6 w-6 text-white" />
-            </div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: delay + 0.3, type: "spring" }}
+            >
+              <TrendingUp className="h-4 w-4 text-green-500" />
+            </motion.div>
           </div>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: delay + 0.2 }}
+            className="text-3xl font-bold tracking-tight"
+          >
+            {value}
+          </motion.p>
+          <p className="text-sm text-muted-foreground mt-1">{label}</p>
         </CardContent>
       </Card>
     </motion.div>
@@ -226,94 +230,99 @@ export default function ProfilePage() {
 
           {/* Profile Header Card */}
           <motion.div variants={itemVariants}>
-            <Card className="overflow-hidden">
-              <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row">
-                  {/* Left side - Avatar section */}
-                  <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 flex flex-col items-center justify-center sm:w-64">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                    >
-                      <Avatar className="h-28 w-28 border-4 border-background shadow-lg">
-                        <AvatarImage src={profile?.user.image || undefined} />
-                        <AvatarFallback className="text-3xl font-bold bg-primary text-primary-foreground">
-                          {profile?.user.name?.charAt(0).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                    </motion.div>
-                    
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="mt-4"
-                    >
-                      <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-0">
-                        <BadgeCheck className="h-3 w-3 mr-1" />
-                        Verified
-                      </Badge>
-                    </motion.div>
-                  </div>
-                  
-                  {/* Right side - Info section */}
-                  <div className="flex-1 p-6 sm:p-8">
-                    <div className="flex flex-col gap-4">
-                      <div>
-                        <motion.h1
-                          className="text-2xl font-bold tracking-tight"
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          {profile?.user.name || "User"}
-                        </motion.h1>
-                        
+            <Card className="relative overflow-hidden border shadow-xl">
+              {/* Gradient mesh background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5" />
+              <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-500/10 via-transparent to-transparent rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-primary/10 via-transparent to-transparent rounded-full blur-2xl" />
+              
+              <CardContent className="p-0 relative">
+                {/* Top accent bar */}
+                <div className="h-1 bg-gradient-to-r from-primary via-purple-500 to-blue-500" />
+                
+                <div className="p-6 sm:p-8">
+                  <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+                    {/* Avatar section */}
+                    <div className="flex flex-col items-center sm:items-start">
+                      <motion.div
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                        className="relative"
+                      >
+                        <div className="absolute -inset-1 bg-gradient-to-br from-primary/50 to-primary/20 rounded-full blur-sm" />
+                        <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-xl relative">
+                          <AvatarImage src={profile?.user.image || undefined} />
+                          <AvatarFallback className="text-2xl sm:text-3xl font-bold bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900">
+                            {profile?.user.name?.charAt(0).toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </Avatar>
                         <motion.div
-                          className="flex items-center gap-2 text-muted-foreground mt-2"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.4 }}
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.5, type: "spring" }}
+                          className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 border-2 border-background"
                         >
+                          <BadgeCheck className="h-4 w-4 text-white" />
+                        </motion.div>
+                      </motion.div>
+                    </div>
+                    
+                    {/* Info section */}
+                    <div className="flex-1 text-center sm:text-left">
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                          {profile?.user.name || "User"}
+                        </h1>
+                        <div className="flex items-center justify-center sm:justify-start gap-2 text-muted-foreground mt-2">
                           <Mail className="h-4 w-4" />
                           <span className="text-sm">{profile?.user.email}</span>
-                        </motion.div>
-                      </div>
-                      
-                      <Separator className="my-2" />
+                        </div>
+                      </motion.div>
                       
                       <motion.div
-                        className="grid grid-cols-2 gap-4"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
+                        transition={{ delay: 0.4 }}
+                        className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-4"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-muted">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Joined</p>
-                            <p className="text-sm font-medium">
-                              {profile ? formatDate(profile.user.createdAt) : "..."}
-                            </p>
-                          </div>
+                        <Badge variant="secondary" className="rounded-full px-3 py-1 gap-1.5">
+                          <Calendar className="h-3 w-3" />
+                          Joined {profile ? formatDate(profile.user.createdAt) : "..."}
+                        </Badge>
+                        <Badge variant="outline" className="rounded-full px-3 py-1 gap-1.5 capitalize">
+                          <Shield className="h-3 w-3" />
+                          {profile?.user.provider === "credentials" 
+                            ? "Email" 
+                            : profile?.user.provider || "Unknown"
+                          }
+                        </Badge>
+                      </motion.div>
+
+                      {/* Mini stats row */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="flex items-center justify-center sm:justify-start gap-6 mt-6 pt-6 border-t border-border/50"
+                      >
+                        <div className="text-center sm:text-left">
+                          <p className="text-2xl font-bold">{profile?.stats.totalFiles || 0}</p>
+                          <p className="text-xs text-muted-foreground">Uploads</p>
                         </div>
-                        
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-muted">
-                            <Shield className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Account</p>
-                            <p className="text-sm font-medium capitalize">
-                              {profile?.user.provider === "credentials" 
-                                ? "Email" 
-                                : profile?.user.provider || "Unknown"
-                              }
-                            </p>
-                          </div>
+                        <Separator orientation="vertical" className="h-10" />
+                        <div className="text-center sm:text-left">
+                          <p className="text-2xl font-bold">{profile?.stats.activeShares || 0}</p>
+                          <p className="text-xs text-muted-foreground">Active</p>
+                        </div>
+                        <Separator orientation="vertical" className="h-10" />
+                        <div className="text-center sm:text-left">
+                          <p className="text-2xl font-bold">{profile?.stats.totalDownloads || 0}</p>
+                          <p className="text-xs text-muted-foreground">Downloads</p>
                         </div>
                       </motion.div>
                     </div>
@@ -326,36 +335,36 @@ export default function ProfilePage() {
           {/* Stats Grid */}
           <motion.div variants={itemVariants}>
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" />
-              Your Stats
+              <Activity className="h-5 w-5 text-primary" />
+              Activity Overview
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard
                 icon={Upload}
                 label="Total Uploads"
                 value={profile?.stats.totalFiles || 0}
-                gradient="bg-gradient-to-br from-blue-500 to-blue-600"
+                color="blue"
                 delay={0}
               />
               <StatCard
                 icon={Share2}
                 label="Total Shares"
                 value={profile?.stats.totalShares || 0}
-                gradient="bg-gradient-to-br from-purple-500 to-purple-600"
+                color="purple"
                 delay={0.1}
               />
               <StatCard
                 icon={Clock}
                 label="Active Links"
                 value={profile?.stats.activeShares || 0}
-                gradient="bg-gradient-to-br from-green-500 to-green-600"
+                color="green"
                 delay={0.2}
               />
               <StatCard
                 icon={Download}
                 label="Total Downloads"
                 value={profile?.stats.totalDownloads || 0}
-                gradient="bg-gradient-to-br from-orange-500 to-orange-600"
+                color="orange"
                 delay={0.3}
               />
             </div>
@@ -363,38 +372,44 @@ export default function ProfilePage() {
 
           {/* Daily Quota */}
           <motion.div variants={itemVariants}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  Today's Usage
-                </CardTitle>
-                <CardDescription>
-                  Your daily upload quota resets at midnight UTC
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span>Uploads today</span>
-                    <span className="font-medium">
-                      {profile?.stats.todayUploads || 0} / {profile?.stats.dailyLimit || 20}
-                    </span>
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex flex-col sm:flex-row">
+                  <div className="flex-1 p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100">
+                        <Zap className="h-5 w-5 text-zinc-300 dark:text-zinc-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Today&apos;s Usage</h3>
+                        <p className="text-sm text-muted-foreground">Resets at midnight UTC</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Uploads today</span>
+                        <span className="font-semibold">
+                          {profile?.stats.todayUploads || 0} / {profile?.stats.dailyLimit || 20}
+                        </span>
+                      </div>
+                      <motion.div
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ delay: 0.5, duration: 0.5 }}
+                        style={{ transformOrigin: "left" }}
+                      >
+                        <Progress value={quotaPercentage} className="h-2.5" />
+                      </motion.div>
+                    </div>
                   </div>
-                  <motion.div
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 0.5, duration: 0.5 }}
-                    style={{ transformOrigin: "left" }}
-                  >
-                    <Progress value={quotaPercentage} className="h-3" />
-                  </motion.div>
-                  <p className="text-xs text-muted-foreground">
-                    {profile && profile.stats.dailyLimit - profile.stats.todayUploads > 0
-                      ? `${profile.stats.dailyLimit - profile.stats.todayUploads} uploads remaining today`
-                      : "Daily limit reached. Try again tomorrow!"
-                    }
-                  </p>
+                  
+                  <div className="sm:w-48 p-6 bg-muted/30 flex flex-col items-center justify-center text-center border-t sm:border-t-0 sm:border-l">
+                    <p className="text-4xl font-bold text-primary">
+                      {profile ? profile.stats.dailyLimit - profile.stats.todayUploads : 20}
+                    </p>
+                    <p className="text-sm text-muted-foreground">remaining</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -402,22 +417,20 @@ export default function ProfilePage() {
 
           {/* Quick Actions */}
           <motion.div variants={itemVariants}>
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary" />
+              Quick Actions
+            </h2>
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-primary" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <motion.div whileHover={{ x: 5 }} whileTap={{ scale: 0.98 }}>
+              <CardContent className="p-2">
+                <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <Link
                     href="/dashboard"
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
+                    className="flex items-center justify-between p-4 rounded-xl hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <Upload className="h-4 w-4 text-primary" />
+                    <div className="flex items-center gap-4">
+                      <div className="p-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100">
+                        <Upload className="h-5 w-5 text-zinc-300 dark:text-zinc-600" />
                       </div>
                       <div>
                         <p className="font-medium">My Files</p>
@@ -428,16 +441,16 @@ export default function ProfilePage() {
                   </Link>
                 </motion.div>
 
-                <Separator />
+                <Separator className="mx-4" />
 
-                <motion.div whileHover={{ x: 5 }} whileTap={{ scale: 0.98 }}>
+                <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <Link
                     href="/history"
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
+                    className="flex items-center justify-between p-4 rounded-xl hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-purple-500/10">
-                        <Clock className="h-4 w-4 text-purple-500" />
+                    <div className="flex items-center gap-4">
+                      <div className="p-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100">
+                        <Clock className="h-5 w-5 text-zinc-300 dark:text-zinc-600" />
                       </div>
                       <div>
                         <p className="font-medium">Share History</p>
@@ -448,16 +461,16 @@ export default function ProfilePage() {
                   </Link>
                 </motion.div>
 
-                <Separator />
+                <Separator className="mx-4" />
 
-                <motion.div whileHover={{ x: 5 }} whileTap={{ scale: 0.98 }}>
+                <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <button
                     onClick={() => signOut({ callbackUrl: "/" })}
-                    className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-destructive/10 transition-colors text-left"
+                    className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-destructive/5 transition-colors text-left"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-destructive/10">
-                        <LogOut className="h-4 w-4 text-destructive" />
+                    <div className="flex items-center gap-4">
+                      <div className="p-2.5 rounded-xl bg-destructive/10">
+                        <LogOut className="h-5 w-5 text-destructive" />
                       </div>
                       <div>
                         <p className="font-medium text-destructive">Sign Out</p>
