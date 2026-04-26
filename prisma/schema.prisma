@@ -1,0 +1,62 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mongodb"
+    url      = env("DATABASE_URI")
+}
+
+model User {
+    id            String      @id @default(auto()) @map("_id") @db.ObjectId
+    name          String?
+    email         String?     @unique
+    emailVerified DateTime?
+    image         String?
+    provider      String?
+    providerId    String?
+    passwordHash  String?
+    createdAt     DateTime    @default(now())
+    files         File[]
+    shares        ShareLink[]
+}
+
+model File {
+    id          String     @id @default(auto()) @map("_id") @db.ObjectId
+    uploaderId  String?    @db.ObjectId
+    uploader    User?      @relation(fields: [uploaderId], references: [id])
+    filename    String
+    mime        String
+    size        Int
+    checksum    String
+    storage     String
+    publicId    String
+    secureUrl   String
+    createdAt   DateTime   @default(now())
+    deletedAt   DateTime?
+    share       ShareLink?
+    isAnonymous Boolean    @default(false)
+}
+
+model ShareLink {
+    id            String   @id @default(auto()) @map("_id") @db.ObjectId
+    fileId        String   @unique @db.ObjectId
+    file          File     @relation(fields: [fileId], references: [id])
+    code          String   @unique
+    expiresAt     DateTime
+    downloadLimit Int      @default(1)
+    downloadCount Int      @default(0)
+    status        String   @default("active") // active|expired|deleted
+    createdAt     DateTime @default(now())
+    uploaderId    String?  @db.ObjectId
+    uploader      User?    @relation(fields: [uploaderId], references: [id])
+}
+
+model AnonQuota {
+    id        String   @id @default(auto()) @map("_id") @db.ObjectId
+    anonId    String   @unique
+    ip        String
+    uploads   Int      @default(0)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
