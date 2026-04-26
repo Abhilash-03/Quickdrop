@@ -8,9 +8,11 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET!,
 })
 
-export async function GET(_: NextRequest, { params } : { params : { code: string }}) {
+export async function GET(_: NextRequest, { params } : { params : Promise<{ code: string }>}) {
+    const { code } = await params
+    
     const link = await prisma.shareLink.findUnique({
-        where: { code: params.code },
+        where: { code },
         include: { file: true },
     })
 

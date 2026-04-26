@@ -4,10 +4,12 @@ import { NextRequest, NextResponse } from "next/server"
 // Get share link info without downloading
 export async function GET(
   _: NextRequest,
-  { params }: { params: { code: string } }
+  { params }: { params: Promise<{ code: string }> }
 ) {
+  const { code } = await params
+  
   const link = await prisma.shareLink.findUnique({
-    where: { code: params.code },
+    where: { code },
     include: { file: true },
   })
 

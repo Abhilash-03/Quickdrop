@@ -12,8 +12,9 @@ cloudinary.config({
 
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const session = await getServerSession(authOptions)
   
   if (!session?.user?.id) {
@@ -21,7 +22,7 @@ export async function DELETE(
   }
 
   const share = await prisma.shareLink.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { file: true },
   })
 
