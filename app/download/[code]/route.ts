@@ -28,14 +28,22 @@ export async function GET(_: NextRequest, { params } : { params : { code: string
     })
 
     if(updated.downloadCount >= updated.downloadLimit) {
-        await expireAndDelete(updated);
+        await expireAndDelete(link);
     }
 
     // Redirect user to cloudinary file (fast CDN)
     return NextResponse.redirect(link.file.secureUrl, 302);
 }
 
-async function expireAndDelete(link: any) {
+interface LinkWithFile {
+  id: string
+  fileId: string
+  file: {
+    publicId: string
+  }
+}
+
+async function expireAndDelete(link: LinkWithFile) {
     await prisma.shareLink.update({
         where: { id: link.id },
         data: { status: "expired" },
@@ -49,6 +57,6 @@ async function expireAndDelete(link: any) {
     try{
         await cloudinary.uploader.destroy(link.file.publicId)
     } catch (error) {
-        console.log("Expire and Delete Link Error: ", error.message);
+        console.log("Expire and Delete Link Error: ", error instanceof Error ? error.message : error);
     }
 }
