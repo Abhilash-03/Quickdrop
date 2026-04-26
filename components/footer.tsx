@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { Github } from "lucide-react"
 
 export function Footer() {
   return (
@@ -20,14 +19,6 @@ export function Footer() {
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Terms
-          </Link>
-          <Link
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Github className="h-5 w-5" />
           </Link>
         </div>
       </div>
