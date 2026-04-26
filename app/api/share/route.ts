@@ -21,19 +21,6 @@ const DAILY_LIMITS = {
     authenticated: 20,
 }
 
-// helper
-function getOrSetAnon(req: NextRequest) {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "0.0.0.0";
-    const cookies = req.cookies;
-    let anonId = cookies.get("anonId")?.value;
-    if(!anonId) {
-        anonId = crypto.randomUUID();
-    }
-    const res = NextResponse.next();
-    res.cookies.set("anonId", anonId!, { httpOnly: true, sameSite: "lax", maxAge: 60 * 60 * 24 * 365 });
-    return { anonId: anonId!, ip };
-}
-
 function getTodayDate(): string {
     return new Date().toISOString().split("T")[0] // YYYY-MM-DD
 }
@@ -59,20 +46,47 @@ export async function POST(req: NextRequest) {
         
         const data = parseResult.data;
         const today = getTodayDate();
+        
+        // Cookie for anonymous users
+        let anonId: string | undefined;
+        let shouldSetCookie = false;
 
         // Quota check
         if(!session?.user) {
             // Anonymous quota check
-            const { anonId, ip } = getOrSetAnon(req);
-            const quota = await prisma.anonQuota.upsert({
-                where: { anonId },
-                update: { uploads: {increment: 1}, ip},
-                create: {anonId, ip, uploads: 1},
-            })
-
-            if(quota.uploads > DAILY_LIMITS.anonymous) {
-                return NextResponse.json({ error: "Anonymous upload limit reached (3/day). Sign in for more uploads."}, { status: 403 });
+            const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "0.0.0.0";
+            anonId = req.cookies.get("anonId")?.value;
+            
+            if (!anonId) {
+                anonId = crypto.randomUUID();
+                shouldSetCookie = true;
             }
+            
+            // Check existing quota first
+            const existingQuota = await prisma.anonQuota.findUnique({
+                where: { anonId }
+            });
+            
+            // Get today's date for daily reset check
+            const quotaDate = existingQuota?.updatedAt.toISOString().split("T")[0];
+            const isNewDay = quotaDate !== today;
+            
+            // If quota exists and it's the same day and limit reached, reject
+            if (existingQuota && !isNewDay && existingQuota.uploads >= DAILY_LIMITS.anonymous) {
+                return NextResponse.json(
+                    { error: "Anonymous upload limit reached (3/day). Sign in for more uploads." },
+                    { status: 403 }
+                );
+            }
+            
+            // Update or create quota (reset if new day)
+            await prisma.anonQuota.upsert({
+                where: { anonId },
+                update: isNewDay 
+                    ? { uploads: 1, ip } // Reset on new day
+                    : { uploads: { increment: 1 }, ip },
+                create: { anonId, ip, uploads: 1 },
+            });
         } else {
             // Authenticated user quota check
             const userId = session.user.id as string;
@@ -130,7 +144,18 @@ export async function POST(req: NextRequest) {
             }
         })
 
-        return NextResponse.json({ url: `${baseUrl}/d/${share.code}`});
+        const response = NextResponse.json({ url: `${baseUrl}/d/${share.code}`});
+        
+        // Set cookie for anonymous users
+        if (shouldSetCookie && anonId) {
+            response.cookies.set("anonId", anonId, {
+                httpOnly: true,
+                sameSite: "lax",
+                maxAge: 60 * 60 * 24 * 365, // 1 year
+            });
+        }
+        
+        return response;
     } catch (error) {
         console.error("Share API error:", error);
         return NextResponse.json(
