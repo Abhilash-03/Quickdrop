@@ -4,6 +4,7 @@ import { useCallback, useState } from "react"
 import { Upload, FileIcon, X, Loader2 } from "lucide-react"
 import { useUploadStore } from "@/lib/upload-store"
 import { useFileUpload } from "@/hooks/use-file-upload"
+import { useQuota } from "@/hooks/use-quota"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
@@ -35,6 +36,7 @@ export function FileUploader() {
   } = useUploadStore()
 
   const { upload, isUploading } = useFileUpload()
+  const { data: quota } = useQuota()
 
   const validateFile = (file: File): string | null => {
     const ext = file.name.split(".").pop()?.toLowerCase()
@@ -100,34 +102,42 @@ export function FileUploader() {
   // Render different states
   if (!currentFile) {
     return (
-      <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        className={`
-          border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer
-          ${
-            isDragging
-              ? "border-primary bg-primary/5"
-              : "border-muted-foreground/25 hover:border-primary/50 bg-muted/30"
-          }
-        `}
-      >
-        <label className="cursor-pointer block">
-          <input
-            type="file"
-            className="hidden"
-            accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.zip,image/*,application/pdf,application/zip"
-            onChange={handleInputChange}
-          />
-          <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-lg font-medium">
-            {isDragging ? "Drop your file here" : "Drop files here or click to upload"}
+      <div className="space-y-3">
+        <div
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          className={`
+            border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer
+            ${
+              isDragging
+                ? "border-primary bg-primary/5"
+                : "border-muted-foreground/25 hover:border-primary/50 bg-muted/30"
+            }
+          `}
+        >
+          <label className="cursor-pointer block">
+            <input
+              type="file"
+              className="hidden"
+              accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.zip,image/*,application/pdf,application/zip"
+              onChange={handleInputChange}
+            />
+            <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-lg font-medium">
+              {isDragging ? "Drop your file here" : "Drop files here or click to upload"}
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Images, PDFs, and ZIP files up to {MAX_SIZE_MB}MB
+            </p>
+          </label>
+        </div>
+        {quota && (
+          <p className="text-center text-sm text-muted-foreground">
+            {quota.remaining}/{quota.limit} uploads remaining today
+            {quota.isAnonymous && " • Sign in for more"}
           </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Images, PDFs, and ZIP files up to {MAX_SIZE_MB}MB
-          </p>
-        </label>
+        )}
       </div>
     )
   }

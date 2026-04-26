@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { uploadApi, uploadToCloudinary } from "@/lib/api"
 import { useUploadStore } from "@/lib/upload-store"
 import { useSession } from "next-auth/react"
@@ -31,6 +31,7 @@ function sanitizeError(error: unknown): string {
 
 export function useFileUpload() {
   const { data: session } = useSession()
+  const queryClient = useQueryClient()
   const {
     currentFile,
     expiresInHours,
@@ -87,6 +88,7 @@ export function useFileUpload() {
     },
     onSuccess: (url) => {
       setShareUrl(url)
+      queryClient.invalidateQueries({ queryKey: ["quota"] })
       toast.success("File uploaded successfully!")
     },
     onError: (error) => {
