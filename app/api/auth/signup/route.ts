@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
         name,
         email,
         passwordHash,
+        provider: "credentials",
       },
     })
 
