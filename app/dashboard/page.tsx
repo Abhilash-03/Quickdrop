@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -21,8 +21,9 @@ import {
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useAuthModal } from "@/lib/auth-modal-store"
+import { useDashboard, useDeleteShare, type Share } from "@/hooks/use-dashboard"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   Tooltip,
@@ -31,19 +32,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { toast } from "sonner"
-
-interface Share {
-  id: string
-  code: string
-  filename: string
-  mime: string
-  size: number
-  status: string
-  downloadCount: number
-  downloadLimit: number
-  expiresAt: string
-  createdAt: string
-}
 
 function getFileIcon(mime: string) {
   if (mime.startsWith("image/")) return FileImage
@@ -82,36 +70,18 @@ export default function DashboardPage() {
   const { data: session, status: authStatus } = useSession()
   const router = useRouter()
   const { openLogin } = useAuthModal()
-  const [shares, setShares] = useState<Share[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (authStatus === "unauthenticated") {
-      router.push("/")
-      openLogin()
-    }
-  }, [authStatus, router, openLogin])
+  // React Query hooks
+  const { data: shares = [], isLoading } = useDashboard(authStatus === "authenticated")
+  const deleteShare = useDeleteShare()
 
-  useEffect(() => {
-    async function fetchShares() {
-      if (authStatus !== "authenticated") return
-      
-      try {
-        const res = await fetch("/api/dashboard")
-        if (res.ok) {
-          const data = await res.json()
-          setShares(data.shares)
-        }
-      } catch {
-        toast.error("Failed to load your files")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    
-    fetchShares()
-  }, [authStatus])
+  // Redirect unauthenticated users
+  if (authStatus === "unauthenticated") {
+    router.push("/")
+    openLogin()
+    return null
+  }
 
   const handleCopy = async (code: string) => {
     const url = `${window.location.origin}/d/${code}`
@@ -125,23 +95,12 @@ export default function DashboardPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm("Are you sure you want to delete this file?")) return
-    
-    try {
-      const res = await fetch(`/api/share/${id}`, { method: "DELETE" })
-      if (res.ok) {
-        setShares(shares.filter(s => s.id !== id))
-        toast.success("File deleted")
-      } else {
-        toast.error("Failed to delete file")
-      }
-    } catch {
-      toast.error("Failed to delete file")
-    }
+    deleteShare.mutate(id)
   }
 
-  if (authStatus === "loading" || (authStatus === "authenticated" && isLoading)) {
+  if (authStatus === "loading" || isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
         <Header />
@@ -153,10 +112,6 @@ export default function DashboardPage() {
         <Footer />
       </div>
     )
-  }
-
-  if (authStatus === "unauthenticated") {
-    return null
   }
 
   return (

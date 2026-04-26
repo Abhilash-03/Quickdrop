@@ -1,9 +1,9 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { useSession } from "next-auth/react"
 import { Upload, FileIcon, X, Loader2 } from "lucide-react"
 import { useUploadStore } from "@/lib/upload-store"
+import { useFileUpload } from "@/hooks/use-file-upload"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
@@ -16,29 +16,35 @@ const ALLOWED_TYPES = [
   "image/webp",
   "application/pdf",
   "application/zip",
+  "application/x-zip-compressed",
+  "application/x-zip",
 ]
 
-const MAX_SIZE_MB = 50
+const MAX_SIZE_MB = 10 // Cloudinary free tier limit
 
 export function FileUploader() {
   const [isDragging, setIsDragging] = useState(false)
-  const { data: session } = useSession()
   const {
     currentFile,
     expiresInHours,
     downloadLimit,
     setFile,
-    setProgress,
-    setStatus,
-    setError,
-    setShareUrl,
     setExpiresInHours,
     setDownloadLimit,
     reset,
   } = useUploadStore()
 
+  const { upload, isUploading } = useFileUpload()
+
   const validateFile = (file: File): string | null => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const ext = file.name.split(".").pop()?.toLowerCase()
+    const isZip = ext === "zip" || file.type.includes("zip")
+    const isPdf = ext === "pdf" || file.type === "application/pdf"
+    const isImage =
+      file.type.startsWith("image/") ||
+      ["jpg", "jpeg", "png", "gif", "webp"].includes(ext || "")
+
+    if (!ALLOWED_TYPES.includes(file.type) && !isZip && !isPdf && !isImage) {
       return "File type not supported. Use images, PDFs, or ZIP files."
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
@@ -47,21 +53,27 @@ export function FileUploader() {
     return null
   }
 
-  const handleFile = useCallback((file: File) => {
-    const error = validateFile(file)
-    if (error) {
-      toast.error(error)
-      return
-    }
-    setFile(file)
-  }, [setFile])
+  const handleFile = useCallback(
+    (file: File) => {
+      const error = validateFile(file)
+      if (error) {
+        toast.error(error)
+        return
+      }
+      setFile(file)
+    },
+    [setFile]
+  )
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
-  }, [handleFile])
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDragging(false)
+      const file = e.dataTransfer.files[0]
+      if (file) handleFile(file)
+    },
+    [handleFile]
+  )
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -73,107 +85,16 @@ export function FileUploader() {
     setIsDragging(false)
   }, [])
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) handleFile(file)
-  }, [handleFile])
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (file) handleFile(file)
+    },
+    [handleFile]
+  )
 
-  // Compute SHA-256 checksum
-  async function computeChecksum(file: File): Promise<string> {
-    const buffer = await file.arrayBuffer()
-    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("")
-  }
-
-  const handleUpload = async () => {
-    if (!currentFile) return
-
-    try {
-      setStatus("uploading")
-
-      // 1. Get signed upload params
-      const signRes = await fetch("/api/upload/sign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mime: currentFile.file.type,
-          size: currentFile.file.size,
-        }),
-      })
-
-      if (!signRes.ok) {
-        const err = await signRes.json()
-        throw new Error(err.error || "Failed to get upload signature")
-      }
-
-      const { cloudName, apiKey, timestamp, folder, signature } = await signRes.json()
-
-      // 2. Upload to Cloudinary
-      const formData = new FormData()
-      formData.append("file", currentFile.file)
-      formData.append("api_key", apiKey)
-      formData.append("timestamp", timestamp.toString())
-      formData.append("folder", folder)
-      formData.append("signature", signature)
-
-      const xhr = new XMLHttpRequest()
-      xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`)
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100)
-          setProgress(percent)
-        }
-      }
-
-      const uploadResult = await new Promise<any>((resolve, reject) => {
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(JSON.parse(xhr.responseText))
-          } else {
-            reject(new Error("Upload failed"))
-          }
-        }
-        xhr.onerror = () => reject(new Error("Upload failed"))
-        xhr.send(formData)
-      })
-
-      setStatus("processing")
-
-      // 3. Compute checksum
-      const checksum = await computeChecksum(currentFile.file)
-
-      // 4. Create share link
-      const shareRes = await fetch("/api/share", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: currentFile.file.name,
-          mime: currentFile.file.type,
-          size: currentFile.file.size,
-          secureUrl: uploadResult.secure_url,
-          publicId: uploadResult.public_id,
-          expiresInHours,
-          downloadLimit,
-          checksum,
-          isAnonymous: !session?.user,
-        }),
-      })
-
-      if (!shareRes.ok) {
-        const err = await shareRes.json()
-        throw new Error(err.error || "Failed to create share link")
-      }
-
-      const { url } = await shareRes.json()
-      setShareUrl(url)
-      toast.success("File uploaded successfully!")
-
-    } catch (err: any) {
-      setError(err.message)
-      toast.error(err.message)
-    }
+  const handleUpload = () => {
+    upload()
   }
 
   // Render different states
@@ -185,9 +106,10 @@ export function FileUploader() {
         onDragLeave={handleDragLeave}
         className={`
           border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer
-          ${isDragging 
-            ? "border-primary bg-primary/5" 
-            : "border-muted-foreground/25 hover:border-primary/50 bg-muted/30"
+          ${
+            isDragging
+              ? "border-primary bg-primary/5"
+              : "border-muted-foreground/25 hover:border-primary/50 bg-muted/30"
           }
         `}
       >
@@ -195,7 +117,7 @@ export function FileUploader() {
           <input
             type="file"
             className="hidden"
-            accept={ALLOWED_TYPES.join(",")}
+            accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.zip,image/*,application/pdf,application/zip"
             onChange={handleInputChange}
           />
           <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -257,7 +179,10 @@ export function FileUploader() {
                 min={1}
                 max={100}
                 value={downloadLimit}
-                onChange={(e) => setDownloadLimit(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = Number(e.target.value)
+                  setDownloadLimit(Math.min(100, Math.max(1, val || 1)))
+                }}
               />
             </div>
           </div>
@@ -286,7 +211,7 @@ export function FileUploader() {
       <div className="flex gap-3">
         {currentFile.status === "idle" && (
           <>
-            <Button onClick={handleUpload} className="flex-1">
+            <Button onClick={handleUpload} className="flex-1" disabled={isUploading}>
               <Upload className="h-4 w-4 mr-2" />
               Upload & Share
             </Button>
@@ -295,7 +220,7 @@ export function FileUploader() {
             </Button>
           </>
         )}
-        
+
         {(currentFile.status === "uploading" || currentFile.status === "processing") && (
           <Button disabled className="flex-1">
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />

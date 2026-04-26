@@ -1,0 +1,63 @@
+"use client"
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { dashboardApi } from "@/lib/api"
+import { toast } from "sonner"
+
+export interface Share {
+  id: string
+  code: string
+  filename: string
+  mime: string
+  size: number
+  status: string
+  downloadCount: number
+  downloadLimit: number
+  expiresAt: string
+  createdAt: string
+}
+
+// Fetch all shares
+export function useDashboard(enabled = true) {
+  return useQuery({
+    queryKey: ["dashboard", "shares"],
+    queryFn: async () => {
+      const res = await dashboardApi.getShares()
+      return res.data.shares as Share[]
+    },
+    enabled,
+  })
+}
+
+// Delete a share
+export function useDeleteShare() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => dashboardApi.deleteShare(id),
+    onMutate: async (id) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["dashboard", "shares"] })
+
+      // Snapshot previous value
+      const previous = queryClient.getQueryData<Share[]>(["dashboard", "shares"])
+
+      // Optimistic update
+      queryClient.setQueryData<Share[]>(["dashboard", "shares"], (old) =>
+        old?.filter((share) => share.id !== id)
+      )
+
+      return { previous }
+    },
+    onError: (_err, _id, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(["dashboard", "shares"], context.previous)
+      }
+      toast.error("Failed to delete file")
+    },
+    onSuccess: () => {
+      toast.success("File deleted")
+    },
+  })
+}
