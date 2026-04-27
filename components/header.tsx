@@ -45,8 +45,8 @@ export function Header() {
                   <Link href="/history">
                     <History className="h-5 w-5" />
                     {shareHistory.length > 0 && (
-                      <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-medium text-primary-foreground flex items-center justify-center">
-                        {shareHistory.length > 9 ? "9+" : shareHistory.length}
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-[10px] font-semibold text-primary-foreground flex items-center justify-center shadow-sm ring-2 ring-background">
+                        {shareHistory.length > 99 ? "99+" : shareHistory.length}
                       </span>
                     )}
                   </Link>

@@ -94,12 +94,12 @@ export function SocialShare({
       <DialogContent className="sm:max-w-sm p-0 gap-0 overflow-hidden border-0">
         <DialogTitle className="sr-only">Share Your File</DialogTitle>
         {/* Header with gradient */}
-        <div className="relative bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 dark:from-violet-500 dark:via-purple-500 dark:to-indigo-600 px-6 pt-8 pb-12 text-white">
+        <div className="relative bg-primary px-6 pt-8 pb-12 text-primary-foreground">
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            className="mx-auto w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg ring-1 ring-white/20"
+            className="mx-auto w-16 h-16 rounded-2xl bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center shadow-lg ring-1 ring-primary-foreground/20"
           >
             <Share2 className="h-8 w-8" />
           </motion.div>
@@ -115,14 +115,14 @@ export function SocialShare({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-center text-sm text-white/80 mt-1"
+            className="text-center text-sm text-primary-foreground/80 mt-1"
           >
             Send this link to anyone
           </motion.p>
           
           {/* Decorative circles */}
-          <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
-          <div className="absolute -bottom-8 -left-4 w-20 h-20 rounded-full bg-white/10" />
+          <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-primary-foreground/10" />
+          <div className="absolute -bottom-8 -left-4 w-20 h-20 rounded-full bg-primary-foreground/10" />
         </div>
 
         {/* Content */}
