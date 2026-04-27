@@ -8,7 +8,6 @@ import {
   Copy, 
   Check, 
   Trash2, 
-  ExternalLink, 
   FileIcon,
   FileImage,
   FileText,
@@ -32,6 +31,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { toast } from "sonner"
+import { SocialShare } from "@/components/social-share"
 
 function getFileIcon(mime: string) {
   if (mime.startsWith("image/")) return FileImage
@@ -225,22 +225,10 @@ export default function DashboardPage() {
                             </Tooltip>
                           </TooltipProvider>
                           
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  asChild
-                                >
-                                  <Link href={`/d/${share.code}`} target="_blank">
-                                    <ExternalLink className="h-4 w-4" />
-                                  </Link>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Open link</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <SocialShare 
+                            url={`${typeof window !== 'undefined' ? window.location.origin : ''}/d/${share.code}`}
+                            title={`Download ${share.filename} via QuickDrop`}
+                          />
                         </>
                       )}
                       

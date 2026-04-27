@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   Copy,
   Check,
-  ExternalLink,
   Trash2,
   FileIcon,
   FileImage,
@@ -19,7 +18,6 @@ import {
   Search,
   Grid3X3,
   List,
-  Filter,
 } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -28,6 +26,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { SocialShare } from "@/components/social-share"
 import {
   Tooltip,
   TooltipContent,
@@ -182,21 +181,12 @@ function ShareCard({ item, onCopy, onRemove, copiedId, isGrid }: {
                   </Tooltip>
                 </TooltipProvider>
 
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => window.open(item.shareUrl, "_blank")}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Open link</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <SocialShare 
+                  url={item.shareUrl}
+                  title={`Download ${item.filename} via QuickDrop`}
+                  size="sm"
+                  className="flex-1"
+                />
 
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
@@ -285,22 +275,12 @@ function ShareCard({ item, onCopy, onRemove, copiedId, isGrid }: {
                   </Tooltip>
                 </TooltipProvider>
 
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => window.open(item.shareUrl, "_blank")}
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </motion.div>
-                    </TooltipTrigger>
-                    <TooltipContent>Open link</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                  <SocialShare 
+                    url={item.shareUrl}
+                    title={`Download ${item.filename} via QuickDrop`}
+                  />
+                </motion.div>
 
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>

@@ -2,6 +2,22 @@
 
 import { useState } from "react"
 import { Copy, Check, ExternalLink, RefreshCw } from "lucide-react"
+import {
+  WhatsappShareButton,
+  WhatsappIcon,
+  TelegramShareButton,
+  TelegramIcon,
+  TwitterShareButton,
+  XIcon,
+  LinkedinShareButton,
+  LinkedinIcon,
+  FacebookShareButton,
+  FacebookIcon,
+  EmailShareButton,
+  EmailIcon,
+  RedditShareButton,
+  RedditIcon,
+} from "react-share"
 import { useUploadStore } from "@/lib/upload-store"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,6 +28,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { toast } from "sonner"
 
 export function ShareLinkDialog() {
@@ -20,6 +42,7 @@ export function ShareLinkDialog() {
 
   const isOpen = currentFile?.status === "success" && !!currentFile.shareUrl
   const shareUrl = currentFile?.shareUrl || ""
+  const shareTitle = currentFile ? `Download ${currentFile.file.name} via QuickDrop` : "Download file via QuickDrop"
 
   const handleCopy = async () => {
     try {
@@ -48,6 +71,16 @@ export function ShareLinkDialog() {
     const days = Math.floor(expiresInHours / 24)
     return `${days} day${days > 1 ? "s" : ""}`
   }
+
+  const socialButtons = [
+    { Button: WhatsappShareButton, Icon: WhatsappIcon, name: "WhatsApp" },
+    { Button: TelegramShareButton, Icon: TelegramIcon, name: "Telegram" },
+    { Button: TwitterShareButton, Icon: XIcon, name: "X (Twitter)" },
+    { Button: FacebookShareButton, Icon: FacebookIcon, name: "Facebook" },
+    { Button: RedditShareButton, Icon: RedditIcon, name: "Reddit" },
+    { Button: LinkedinShareButton, Icon: LinkedinIcon, name: "LinkedIn" },
+    { Button: EmailShareButton, Icon: EmailIcon, name: "Email" },
+  ]
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -79,6 +112,27 @@ export function ShareLinkDialog() {
                 <Copy className="h-4 w-4" />
               )}
             </Button>
+          </div>
+
+          {/* Social share buttons */}
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Share on</p>
+            <div className="flex items-center justify-center gap-1.5 flex-wrap">
+              <TooltipProvider delayDuration={100}>
+                {socialButtons.map(({ Button: SocialButton, Icon, name }) => (
+                  <Tooltip key={name}>
+                    <TooltipTrigger asChild>
+                      <div className="transition-transform hover:scale-110">
+                        <SocialButton url={shareUrl} title={shareTitle}>
+                          <Icon size={34} round />
+                        </SocialButton>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>{name}</TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
+            </div>
           </div>
 
           {/* File info */}
