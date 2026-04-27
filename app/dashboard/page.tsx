@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { motion, AnimatePresence } from "framer-motion"
 import { 
   Copy, 
   Check, 
@@ -12,10 +13,9 @@ import {
   FileImage,
   FileText,
   FileArchive,
-  Loader2,
   Upload,
-  Clock,
-  Download
+  Download,
+  ArrowLeft,
 } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -24,20 +24,34 @@ import { useDashboard, useDeleteShare, type Share } from "@/hooks/use-dashboard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { toast } from "sonner"
 import { SocialShare } from "@/components/social-share"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 function getFileIcon(mime: string) {
   if (mime.startsWith("image/")) return FileImage
   if (mime === "application/pdf") return FileText
   if (mime === "application/zip") return FileArchive
   return FileIcon
+}
+
+function getFileTypeLabel(mime: string) {
+  if (mime.startsWith("image/")) return "Image"
+  if (mime === "application/pdf") return "PDF"
+  if (mime === "application/zip") return "Archive"
+  if (mime.startsWith("video/")) return "Video"
+  if (mime.startsWith("audio/")) return "Audio"
+  return "File"
 }
 
 function formatFileSize(bytes: number): string {
@@ -50,20 +64,219 @@ function formatDate(date: string): string {
   return new Date(date).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric",
   })
 }
 
-function getStatusBadge(status: string, expiresAt: string) {
+function getStatus(status: string, expiresAt: string) {
   const isExpired = new Date(expiresAt) <= new Date()
-  
-  if (status === "expired" || isExpired) {
-    return <Badge variant="secondary">Expired</Badge>
-  }
-  if (status === "deleted") {
-    return <Badge variant="destructive">Deleted</Badge>
-  }
-  return <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">Active</Badge>
+  if (status === "expired" || isExpired) return "expired"
+  if (status === "deleted") return "deleted"
+  return "active"
+}
+
+const listVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.03 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.2 } },
+  exit: { opacity: 0, x: -20, transition: { duration: 0.15 } },
+}
+
+function FileRow({ 
+  share, 
+  onCopy, 
+  onDelete, 
+  copiedId 
+}: {
+  share: Share
+  onCopy: (code: string) => void
+  onDelete: (id: string) => void
+  copiedId: string | null
+}) {
+  const IconComponent = getFileIcon(share.mime)
+  const status = getStatus(share.status, share.expiresAt)
+  const isActive = status === "active"
+  const isCopied = copiedId === share.code
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/d/${share.code}` : `/d/${share.code}`
+
+  return (
+    <motion.div
+      layout
+      variants={itemVariants}
+      exit="exit"
+      className={`group ${!isActive ? "opacity-50" : ""}`}
+    >
+      {/* Desktop */}
+      <div className="hidden sm:flex items-center gap-4 px-4 py-3.5 rounded-xl hover:bg-muted/50 transition-colors">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+          <IconComponent className="h-5 w-5 text-muted-foreground" />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <p className="font-medium truncate text-sm">{share.filename}</p>
+          <p className="text-xs text-muted-foreground">{getFileTypeLabel(share.mime)}</p>
+        </div>
+        
+        <div className="hidden md:block w-20 text-sm text-muted-foreground text-right">
+          {formatFileSize(share.size)}
+        </div>
+        
+        <div className="hidden lg:flex items-center gap-1.5 w-24 text-sm text-muted-foreground">
+          <Download className="h-3.5 w-3.5" />
+          <span>{share.downloadCount}/{share.downloadLimit}</span>
+        </div>
+        
+        <div className="w-20 text-sm text-muted-foreground text-right">
+          {formatDate(share.createdAt)}
+        </div>
+
+        <div className="w-16">
+          {status === "active" && (
+            <Badge variant="outline" className="text-xs text-green-600 border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-900">
+              Active
+            </Badge>
+          )}
+          {status === "expired" && (
+            <Badge variant="secondary" className="text-xs">
+              Expired
+            </Badge>
+          )}
+          {status === "deleted" && (
+            <Badge variant="destructive" className="text-xs">
+              Deleted
+            </Badge>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {isActive && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onCopy(share.code)}
+              >
+                {isCopied ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+              
+              <SocialShare 
+                url={shareUrl}
+                title={`Download ${share.filename} via QuickDrop`}
+              />
+            </>
+          )}
+          
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this file?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete &quot;{share.filename}&quot; and invalidate its share link.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(share.id)} className="bg-destructive hover:bg-destructive/90">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+      
+      {/* Mobile */}
+      <div className="sm:hidden flex items-center gap-3 px-2 py-3 rounded-xl active:bg-muted/50 transition-colors">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted">
+          <IconComponent className="h-5 w-5 text-muted-foreground" />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-medium truncate text-sm">{share.filename}</p>
+            {status === "active" && (
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500 shrink-0" />
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+            <span>{formatFileSize(share.size)}</span>
+            <span className="opacity-40">•</span>
+            <span>{share.downloadCount}/{share.downloadLimit} downloads</span>
+          </div>
+        </div>
+        
+        <div className="flex items-center">
+          {isActive && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => onCopy(share.code)}
+              >
+                {isCopied ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+              
+              <SocialShare 
+                url={shareUrl}
+                title={`Download ${share.filename} via QuickDrop`}
+              />
+            </>
+          )}
+          
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this file?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete &quot;{share.filename}&quot; and invalidate its share link.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(share.id)} className="bg-destructive hover:bg-destructive/90">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+    </motion.div>
+  )
 }
 
 export default function DashboardPage() {
@@ -72,11 +285,9 @@ export default function DashboardPage() {
   const { openLogin } = useAuthModal()
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  // React Query hooks
   const { data: shares = [], isLoading } = useDashboard(authStatus === "authenticated")
   const deleteShare = useDeleteShare()
 
-  // Redirect unauthenticated users
   if (authStatus === "unauthenticated") {
     router.push("/")
     openLogin()
@@ -96,9 +307,10 @@ export default function DashboardPage() {
   }
 
   const handleDelete = (id: string) => {
-    if (!confirm("Are you sure you want to delete this file?")) return
     deleteShare.mutate(id)
   }
+
+  const activeShares = shares.filter(s => getStatus(s.status, s.expiresAt) === "active")
 
   if (authStatus === "loading" || isLoading) {
     return (
@@ -106,7 +318,7 @@ export default function DashboardPage() {
         <Header />
         <main className="flex-1 container mx-auto px-4 py-16">
           <div className="flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
         </main>
         <Footer />
@@ -117,197 +329,95 @@ export default function DashboardPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      
-      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground text-sm sm:text-base">Manage your shared files</p>
-          </div>
-          <Button asChild className="w-full sm:w-auto">
-            <Link href="/">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload New
-            </Link>
-          </Button>
-        </div>
 
-        {shares.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 text-center px-4">
-              <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-muted mb-4">
-                <FileIcon className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground" />
-              </div>
-              <h2 className="text-lg sm:text-xl font-semibold mb-2">No files yet</h2>
-              <p className="text-muted-foreground text-sm sm:text-base mb-6">
-                Upload your first file to get started.
-              </p>
-              <Button asChild>
+      <main className="flex-1 container mx-auto px-4 py-6 sm:py-10 max-w-4xl">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" asChild className="h-9 w-9 rounded-lg">
                 <Link href="/">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload a File
+                  <ArrowLeft className="h-4 w-4" />
                 </Link>
               </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-3 sm:gap-4">
-            {shares.map((share) => {
-              const IconComponent = getFileIcon(share.mime)
-              const isActive = share.status === "active" && new Date(share.expiresAt) > new Date()
-              
-              return (
-                <Card key={share.id} className={!isActive ? "opacity-60" : ""}>
-                  <CardContent className="p-3 sm:p-4">
-                    {/* Mobile Layout */}
-                    <div className="sm:hidden space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                          <IconComponent className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate text-sm">{share.filename}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {formatFileSize(share.size)} • {formatDate(share.createdAt)}
-                          </p>
-                        </div>
-                        {getStatusBadge(share.status, share.expiresAt)}
-                      </div>
-                      
-                      <div className="flex items-center justify-between pt-2 border-t">
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Download className="h-3 w-3" />
-                            {share.downloadCount}/{share.downloadLimit}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatDate(share.expiresAt)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {isActive && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleCopy(share.code)}
-                              >
-                                {copiedId === share.code ? (
-                                  <Check className="h-4 w-4 text-green-500" />
-                                ) : (
-                                  <Copy className="h-4 w-4" />
-                                )}
-                              </Button>
-                              <SocialShare 
-                                url={`${typeof window !== 'undefined' ? window.location.origin : ''}/d/${share.code}`}
-                                title={`Download ${share.filename} via QuickDrop`}
-                              />
-                            </>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDelete(share.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Desktop Layout */}
-                    <div className="hidden sm:flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                        <IconComponent className="h-6 w-6 text-primary" />
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{share.filename}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                          <span>{formatFileSize(share.size)}</span>
-                          <span>•</span>
-                          <span>{formatDate(share.createdAt)}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4 text-sm">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger className="flex items-center gap-1">
-                              <Download className="h-4 w-4 text-muted-foreground" />
-                              <span>{share.downloadCount}/{share.downloadLimit}</span>
-                            </TooltipTrigger>
-                            <TooltipContent>Downloads</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger className="flex items-center gap-1">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
-                              <span>{formatDate(share.expiresAt)}</span>
-                            </TooltipTrigger>
-                            <TooltipContent>Expires on</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-
-                      {getStatusBadge(share.status, share.expiresAt)}
-
-                      <div className="flex items-center gap-1">
-                        {isActive && (
-                          <>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleCopy(share.code)}
-                                  >
-                                    {copiedId === share.code ? (
-                                      <Check className="h-4 w-4 text-green-500" />
-                                    ) : (
-                                      <Copy className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Copy link</TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            
-                            <SocialShare 
-                              url={`${typeof window !== 'undefined' ? window.location.origin : ''}/d/${share.code}`}
-                              title={`Download ${share.filename} via QuickDrop`}
-                            />
-                          </>
-                        )}
-                        
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive hover:text-destructive"
-                                onClick={() => handleDelete(share.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
+              <div>
+                <h1 className="text-xl sm:text-2xl font-semibold">My Files</h1>
+                <p className="text-sm text-muted-foreground hidden sm:block">
+                  {activeShares.length} active • {shares.length} total
+                </p>
+              </div>
+            </div>
+            
+            <Button asChild size="sm">
+              <Link href="/">
+                <Upload className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Upload</span>
+              </Link>
+            </Button>
           </div>
+        </motion.div>
+
+        {shares.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-16 sm:py-24 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-6">
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h2 className="text-lg font-semibold mb-2">No files yet</h2>
+                <p className="text-muted-foreground text-sm mb-6 max-w-sm">
+                  Upload your first file to start sharing.
+                </p>
+                <Button asChild>
+                  <Link href="/">Upload a file</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            {/* Table header - desktop only */}
+            <div className="hidden sm:flex items-center gap-4 px-4 py-2 text-xs text-muted-foreground font-medium uppercase tracking-wider border-b mb-1">
+              <div className="w-10" />
+              <div className="flex-1">Name</div>
+              <div className="hidden md:block w-20 text-right">Size</div>
+              <div className="hidden lg:block w-24">Downloads</div>
+              <div className="w-20 text-right">Created</div>
+              <div className="w-16">Status</div>
+              <div className="w-[104px]" />
+            </div>
+
+            {/* File list */}
+            <motion.div
+              variants={listVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <AnimatePresence mode="popLayout">
+                {shares.map((share) => (
+                  <FileRow
+                    key={share.id}
+                    share={share}
+                    onCopy={handleCopy}
+                    onDelete={handleDelete}
+                    copiedId={copiedId}
+                  />
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          </motion.div>
         )}
       </main>
 
