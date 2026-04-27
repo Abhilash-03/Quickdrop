@@ -68,14 +68,15 @@ export const authOptions: AuthOptions = {
               emailVerified: new Date(),
             },
           })
-        } else if (!existingUser.provider) {
-          // Link OAuth to existing account
+        } else {
+          // Always update image and name on OAuth login
           await prisma.user.update({
             where: { id: existingUser.id },
             data: {
+              name: user.name || existingUser.name,
+              image: user.image || existingUser.image,
               provider: account.provider,
               providerId: account.providerAccountId,
-              image: user.image || existingUser.image,
             },
           })
         }
