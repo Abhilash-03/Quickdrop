@@ -204,7 +204,7 @@ export function SocialShare({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="grid grid-cols-7 gap-2"
+            className="grid grid-cols-4 sm:grid-cols-7 gap-3 sm:gap-2"
           >
             {socialButtons.map(({ Button: SocialButton, Icon, name }, index) => (
               <TooltipProvider key={name} delayDuration={100}>

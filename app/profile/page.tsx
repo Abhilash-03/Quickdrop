@@ -109,28 +109,28 @@ function StatCard({
       whileTap={{ scale: 0.98 }}
     >
       <Card className="group hover:shadow-lg transition-all duration-300 hover:border-primary/30 h-full">
-        <CardContent className="p-5">
-          <div className="flex items-start justify-between mb-3">
-            <div className={`p-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100`}>
-              <Icon className={`h-5 w-5 text-zinc-300 dark:text-zinc-600`} />
+        <CardContent className="p-3 sm:p-5">
+          <div className="flex items-start justify-between mb-2 sm:mb-3">
+            <div className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-zinc-900 dark:bg-zinc-100`}>
+              <Icon className={`h-4 w-4 sm:h-5 sm:w-5 text-zinc-300 dark:text-zinc-600`} />
             </div>
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: delay + 0.3, type: "spring" }}
             >
-              <TrendingUp className="h-4 w-4 text-green-500" />
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
             </motion.div>
           </div>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: delay + 0.2 }}
-            className="text-3xl font-bold tracking-tight"
+            className="text-xl sm:text-3xl font-bold tracking-tight"
           >
             {value}
           </motion.p>
-          <p className="text-sm text-muted-foreground mt-1">{label}</p>
+          <p className="text-[10px] sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{label}</p>
         </CardContent>
       </Card>
     </motion.div>
@@ -211,12 +211,12 @@ export default function ProfilePage() {
     <div className="flex min-h-screen flex-col">
       <Header />
 
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="max-w-4xl mx-auto space-y-8"
+          className="max-w-4xl mx-auto space-y-6 sm:space-y-8"
         >
           {/* Back button */}
           <motion.div variants={itemVariants}>
@@ -240,8 +240,8 @@ export default function ProfilePage() {
                 {/* Top accent bar */}
                 <div className="h-1 bg-gradient-to-r from-primary via-purple-500 to-blue-500" />
                 
-                <div className="p-6 sm:p-8">
-                  <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+                <div className="p-4 sm:p-6 md:p-8">
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 md:gap-8">
                     {/* Avatar section */}
                     <div className="flex flex-col items-center sm:items-start">
                       <motion.div
@@ -251,9 +251,9 @@ export default function ProfilePage() {
                         className="relative"
                       >
                         <div className="absolute -inset-1 bg-gradient-to-br from-primary/50 to-primary/20 rounded-full blur-sm" />
-                        <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-xl relative">
+                        <Avatar className="h-20 w-20 sm:h-28 sm:w-28 border-4 border-background shadow-xl relative">
                           <AvatarImage src={profile?.user.image || undefined} />
-                          <AvatarFallback className="text-2xl sm:text-3xl font-bold bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900">
+                          <AvatarFallback className="text-xl sm:text-3xl font-bold bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900">
                             {profile?.user.name?.charAt(0).toUpperCase() || "U"}
                           </AvatarFallback>
                         </Avatar>
@@ -261,9 +261,9 @@ export default function ProfilePage() {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ delay: 0.5, type: "spring" }}
-                          className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 border-2 border-background"
+                          className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5 sm:p-1 border-2 border-background"
                         >
-                          <BadgeCheck className="h-4 w-4 text-white" />
+                          <BadgeCheck className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                         </motion.div>
                       </motion.div>
                     </div>
@@ -275,12 +275,12 @@ export default function ProfilePage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
                       >
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                        <h1 className="text-xl sm:text-3xl font-bold tracking-tight">
                           {profile?.user.name || "User"}
                         </h1>
-                        <div className="flex items-center justify-center sm:justify-start gap-2 text-muted-foreground mt-2">
-                          <Mail className="h-4 w-4" />
-                          <span className="text-sm">{profile?.user.email}</span>
+                        <div className="flex items-center justify-center sm:justify-start gap-2 text-muted-foreground mt-1 sm:mt-2">
+                          <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="text-xs sm:text-sm truncate max-w-[200px] sm:max-w-none">{profile?.user.email}</span>
                         </div>
                       </motion.div>
                       
@@ -288,14 +288,14 @@ export default function ProfilePage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.4 }}
-                        className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-4"
+                        className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 mt-3 sm:mt-4"
                       >
-                        <Badge variant="secondary" className="rounded-full px-3 py-1 gap-1.5">
-                          <Calendar className="h-3 w-3" />
+                        <Badge variant="secondary" className="rounded-full px-2 sm:px-3 py-0.5 sm:py-1 gap-1 sm:gap-1.5 text-xs">
+                          <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                           Joined {profile ? formatDate(profile.user.createdAt) : "..."}
                         </Badge>
-                        <Badge variant="outline" className="rounded-full px-3 py-1 gap-1.5 capitalize">
-                          <Shield className="h-3 w-3" />
+                        <Badge variant="outline" className="rounded-full px-2 sm:px-3 py-0.5 sm:py-1 gap-1 sm:gap-1.5 text-xs capitalize">
+                          <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                           {profile?.user.provider === "credentials" 
                             ? "Email" 
                             : profile?.user.provider || "Unknown"
@@ -308,21 +308,21 @@ export default function ProfilePage() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
-                        className="flex items-center justify-center sm:justify-start gap-6 mt-6 pt-6 border-t border-border/50"
+                        className="flex items-center justify-center sm:justify-start gap-4 sm:gap-6 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border/50"
                       >
                         <div className="text-center sm:text-left">
-                          <p className="text-2xl font-bold">{profile?.stats.totalFiles || 0}</p>
-                          <p className="text-xs text-muted-foreground">Uploads</p>
+                          <p className="text-lg sm:text-2xl font-bold">{profile?.stats.totalFiles || 0}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">Uploads</p>
                         </div>
-                        <Separator orientation="vertical" className="h-10" />
+                        <Separator orientation="vertical" className="h-8 sm:h-10" />
                         <div className="text-center sm:text-left">
-                          <p className="text-2xl font-bold">{profile?.stats.activeShares || 0}</p>
-                          <p className="text-xs text-muted-foreground">Active</p>
+                          <p className="text-lg sm:text-2xl font-bold">{profile?.stats.activeShares || 0}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">Active</p>
                         </div>
-                        <Separator orientation="vertical" className="h-10" />
+                        <Separator orientation="vertical" className="h-8 sm:h-10" />
                         <div className="text-center sm:text-left">
-                          <p className="text-2xl font-bold">{profile?.stats.totalDownloads || 0}</p>
-                          <p className="text-xs text-muted-foreground">Downloads</p>
+                          <p className="text-lg sm:text-2xl font-bold">{profile?.stats.totalDownloads || 0}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">Downloads</p>
                         </div>
                       </motion.div>
                     </div>
@@ -334,11 +334,11 @@ export default function ProfilePage() {
 
           {/* Stats Grid */}
           <motion.div variants={itemVariants}>
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
+            <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+              <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               Activity Overview
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <StatCard
                 icon={Upload}
                 label="Total Uploads"
@@ -375,19 +375,19 @@ export default function ProfilePage() {
             <Card className="overflow-hidden">
               <CardContent className="p-0">
                 <div className="flex flex-col sm:flex-row">
-                  <div className="flex-1 p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100">
-                        <Zap className="h-5 w-5 text-zinc-300 dark:text-zinc-600" />
+                  <div className="flex-1 p-4 sm:p-6">
+                    <div className="flex items-center gap-3 mb-3 sm:mb-4">
+                      <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-zinc-900 dark:bg-zinc-100">
+                        <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-300 dark:text-zinc-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold">Today&apos;s Usage</h3>
-                        <p className="text-sm text-muted-foreground">Resets at midnight UTC</p>
+                        <h3 className="font-semibold text-sm sm:text-base">Today&apos;s Usage</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Resets at midnight UTC</p>
                       </div>
                     </div>
                     
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex justify-between text-xs sm:text-sm">
                         <span className="text-muted-foreground">Uploads today</span>
                         <span className="font-semibold">
                           {profile?.stats.todayUploads || 0} / {profile?.stats.dailyLimit || 20}
@@ -399,16 +399,16 @@ export default function ProfilePage() {
                         transition={{ delay: 0.5, duration: 0.5 }}
                         style={{ transformOrigin: "left" }}
                       >
-                        <Progress value={quotaPercentage} className="h-2.5" />
+                        <Progress value={quotaPercentage} className="h-2 sm:h-2.5" />
                       </motion.div>
                     </div>
                   </div>
                   
-                  <div className="sm:w-48 p-6 bg-muted/30 flex flex-col items-center justify-center text-center border-t sm:border-t-0 sm:border-l">
-                    <p className="text-4xl font-bold text-primary">
+                  <div className="sm:w-40 p-4 sm:p-6 bg-muted/30 flex flex-row sm:flex-col items-center justify-center gap-2 text-center border-t sm:border-t-0 sm:border-l">
+                    <p className="text-3xl sm:text-4xl font-bold text-primary">
                       {profile ? profile.stats.dailyLimit - profile.stats.todayUploads : 20}
                     </p>
-                    <p className="text-sm text-muted-foreground">remaining</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">remaining</p>
                   </div>
                 </div>
               </CardContent>
@@ -417,67 +417,67 @@ export default function ProfilePage() {
 
           {/* Quick Actions */}
           <motion.div variants={itemVariants}>
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Settings className="h-5 w-5 text-primary" />
+            <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+              <Settings className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               Quick Actions
             </h2>
             <Card>
-              <CardContent className="p-2">
+              <CardContent className="p-1.5 sm:p-2">
                 <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <Link
                     href="/dashboard"
-                    className="flex items-center justify-between p-4 rounded-xl hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100">
-                        <Upload className="h-5 w-5 text-zinc-300 dark:text-zinc-600" />
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-zinc-900 dark:bg-zinc-100">
+                        <Upload className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-300 dark:text-zinc-600" />
                       </div>
                       <div>
-                        <p className="font-medium">My Files</p>
-                        <p className="text-sm text-muted-foreground">Manage your shared files</p>
+                        <p className="font-medium text-sm sm:text-base">My Files</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Manage your shared files</p>
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                   </Link>
                 </motion.div>
 
-                <Separator className="mx-4" />
+                <Separator className="mx-3 sm:mx-4" />
 
                 <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <Link
                     href="/history"
-                    className="flex items-center justify-between p-4 rounded-xl hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 rounded-xl bg-zinc-900 dark:bg-zinc-100">
-                        <Clock className="h-5 w-5 text-zinc-300 dark:text-zinc-600" />
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-zinc-900 dark:bg-zinc-100">
+                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-300 dark:text-zinc-600" />
                       </div>
                       <div>
-                        <p className="font-medium">Share History</p>
-                        <p className="text-sm text-muted-foreground">View recent shares</p>
+                        <p className="font-medium text-sm sm:text-base">Share History</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">View recent shares</p>
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                   </Link>
                 </motion.div>
 
-                <Separator className="mx-4" />
+                <Separator className="mx-3 sm:mx-4" />
 
                 <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <button
                     onClick={() => signOut({ callbackUrl: "/" })}
-                    className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-destructive/5 transition-colors text-left"
+                    className="w-full flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-destructive/5 transition-colors text-left"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="p-2.5 rounded-xl bg-destructive/10">
-                        <LogOut className="h-5 w-5 text-destructive" />
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-destructive/10">
+                        <LogOut className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
                       </div>
                       <div>
-                        <p className="font-medium text-destructive">Sign Out</p>
-                        <p className="text-sm text-muted-foreground">Log out of your account</p>
+                        <p className="font-medium text-sm sm:text-base text-destructive">Sign Out</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Log out of your account</p>
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                   </button>
                 </motion.div>
               </CardContent>

@@ -37,7 +37,7 @@ export function Header() {
           <span className="text-xl font-bold">QuickDrop</span>
         </Link>
 
-        <nav className="flex items-center gap-2">
+        <nav className="flex items-center gap-1 sm:gap-2">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
