@@ -22,6 +22,7 @@ import {
   BadgeCheck,
   TrendingUp,
   Activity,
+  KeyRound,
 } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -32,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
+import { ChangePasswordDialog } from "@/components/change-password-dialog"
 
 interface ProfileData {
   user: {
@@ -40,6 +42,7 @@ interface ProfileData {
     email: string | null
     image: string | null
     provider: string | null
+    hasPassword: boolean
     createdAt: string
   }
   stats: {
@@ -151,6 +154,7 @@ export default function ProfilePage() {
   const { openLogin } = useAuthModal()
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false)
 
   useEffect(() => {
     if (authStatus === "unauthenticated") {
@@ -465,6 +469,26 @@ export default function ProfilePage() {
 
                 <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <button
+                    onClick={() => setChangePasswordOpen(true)}
+                    className="w-full flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-zinc-900 dark:bg-zinc-100">
+                        <KeyRound className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-300 dark:text-zinc-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm sm:text-base">Change Password</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Update your account password</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                  </button>
+                </motion.div>
+
+                <Separator className="mx-3 sm:mx-4" />
+
+                <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
+                  <button
                     onClick={() => signOut({ callbackUrl: "/" })}
                     className="w-full flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-destructive/5 transition-colors text-left"
                   >
@@ -487,6 +511,14 @@ export default function ProfilePage() {
       </main>
 
       <Footer />
+
+      <ChangePasswordDialog
+        open={changePasswordOpen}
+        onOpenChange={setChangePasswordOpen}
+        hasPassword={profile?.user.hasPassword || false}
+        userEmail={profile?.user.email || ""}
+        provider={profile?.user.provider || null}
+      />
     </div>
   )
 }
