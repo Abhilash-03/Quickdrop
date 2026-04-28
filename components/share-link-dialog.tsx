@@ -200,7 +200,7 @@ export function ShareLinkDialog() {
           {/* File info */}
           {currentFile && (
             <div className="rounded-lg bg-muted/50 p-3 text-sm">
-              <p className="font-medium truncate">{currentFile.file.name}</p>
+              <p className="font-medium truncate text-wrap">{currentFile.file.name}</p>
               <p className="text-muted-foreground">
                 {(currentFile.file.size / 1024 / 1024).toFixed(2)} MB
               </p>

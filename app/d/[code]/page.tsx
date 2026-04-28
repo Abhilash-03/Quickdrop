@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
+import { AxiosError } from "axios"
 import { 
   Download, 
   FileIcon, 
@@ -13,13 +13,19 @@ import {
   FileText,
   FileArchive,
   Upload,
-  Eye
+  Eye,
+  Lock,
+  Unlock,
+  Check
 } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { useLinkInfo } from "@/hooks/use-link-info"
+import { useDownload } from "@/hooks/use-download"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,18 +37,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-
-interface LinkInfo {
-  filename: string
-  mime: string
-  size: number
-  expiresAt: string
-  downloadsRemaining: number
-  downloadLimit: number
-  previewUrl: string
-}
-
-type PageState = "loading" | "ready" | "expired" | "not-found" | "error"
 
 function getFileIcon(mime: string) {
   if (mime.startsWith("image/")) return FileImage
@@ -80,84 +74,44 @@ function formatTimeRemaining(expiresAt: string): string {
 export default function DownloadPage() {
   const params = useParams()
   const code = params.code as string
-  const [state, setState] = useState<PageState>("loading")
-  const [linkInfo, setLinkInfo] = useState<LinkInfo | null>(null)
-  const [isDownloading, setIsDownloading] = useState(false)
 
-  useEffect(() => {
-    async function fetchLinkInfo() {
-      try {
-        const res = await fetch(`/api/link/${code}`)
-        
-        if (res.status === 404) {
-          setState("not-found")
-          return
-        }
-        
-        if (res.status === 410) {
-          setState("expired")
-          return
-        }
-        
-        if (!res.ok) {
-          setState("error")
-          return
-        }
-        
-        const data = await res.json()
-        setLinkInfo(data)
-        setState("ready")
-      } catch {
-        setState("error")
-      }
-    }
-    
-    fetchLinkInfo()
-  }, [code])
+  // Fetch link info
+  const { data: linkInfo, isLoading, error } = useLinkInfo(code)
 
-  const handleDownload = async () => {
-    if (!linkInfo) return
-    
-    setIsDownloading(true)
-    try {
-      const response = await fetch(`/download/${code}`)
-      
-      if (!response.ok) {
-        throw new Error("Download failed")
-      }
-      
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = linkInfo.filename
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-      
-      // Refresh link info to update downloads remaining
-      const res = await fetch(`/api/link/${code}`)
-      if (res.ok) {
-        const data = await res.json()
-        setLinkInfo(data)
-      }
-    } catch (error) {
-      console.error("Download error:", error)
-    } finally {
-      setIsDownloading(false)
-    }
-  }
+  // Download hook
+  const {
+    download,
+    isDownloading,
+    password,
+    setPassword,
+    passwordError,
+    verifyPassword,
+    isVerifying,
+    isVerified,
+    previewUrl: verifiedPreviewUrl,
+  } = useDownload({
+    code,
+    filename: linkInfo?.filename || "download",
+    hasPassword: linkInfo?.hasPassword || false,
+  })
+
+  // Use verified preview URL for password-protected links, otherwise use linkInfo's previewUrl
+  const effectivePreviewUrl = linkInfo?.hasPassword ? verifiedPreviewUrl : linkInfo?.previewUrl
 
   const handlePreview = () => {
-    if (linkInfo?.previewUrl) {
-      window.open(linkInfo.previewUrl, "_blank")
+    if (effectivePreviewUrl) {
+      window.open(effectivePreviewUrl, "_blank")
     }
   }
 
-  // Check if file type supports preview
-  const canPreview = linkInfo?.mime.startsWith("image/") || linkInfo?.mime === "application/pdf"
+  // Determine page state
+  const isExpired = (error as AxiosError)?.response?.status === 410
+  const isNotFound = (error as AxiosError)?.response?.status === 404
+  const hasError = error && !isExpired && !isNotFound
 
+  // Check if file type supports preview (and preview URL is available or will be after verification)
+  const fileSupportsPreview = linkInfo?.mime.startsWith("image/") || linkInfo?.mime === "application/pdf"
+  const canPreview = effectivePreviewUrl && fileSupportsPreview
   const IconComponent = linkInfo ? getFileIcon(linkInfo.mime) : FileIcon
 
   return (
@@ -166,7 +120,7 @@ export default function DownloadPage() {
       
       <main className="flex-1 container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto">
-          {state === "loading" && (
+          {isLoading && (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
@@ -175,7 +129,7 @@ export default function DownloadPage() {
             </Card>
           )}
 
-          {state === "not-found" && (
+          {isNotFound && (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mb-4">
@@ -195,7 +149,7 @@ export default function DownloadPage() {
             </Card>
           )}
 
-          {state === "expired" && (
+          {isExpired && (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-500/10 mb-4">
@@ -215,7 +169,7 @@ export default function DownloadPage() {
             </Card>
           )}
 
-          {state === "error" && (
+          {hasError && (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
@@ -232,7 +186,7 @@ export default function DownloadPage() {
             </Card>
           )}
 
-          {state === "ready" && linkInfo && (
+          {linkInfo && (
             <Card>
               <CardHeader className="text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mx-auto mb-4">
@@ -244,7 +198,7 @@ export default function DownloadPage() {
               
               <CardContent className="space-y-6">
                 {/* Stats */}
-                <div className="flex justify-center gap-4">
+                <div className="flex justify-center gap-4 flex-wrap">
                   <Badge variant="secondary" className="gap-1">
                     <Clock className="h-3 w-3" />
                     {formatTimeRemaining(linkInfo.expiresAt)}
@@ -252,66 +206,124 @@ export default function DownloadPage() {
                   <Badge variant="secondary">
                     {linkInfo.downloadsRemaining}/{linkInfo.downloadLimit} downloads left
                   </Badge>
+                  {linkInfo.hasPassword && (
+                    <Badge variant={isVerified ? "default" : "outline"} className="gap-1">
+                      {isVerified ? (
+                        <>
+                          <Check className="h-3 w-3" />
+                          Unlocked
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="h-3 w-3" />
+                          Protected
+                        </>
+                      )}
+                    </Badge>
+                  )}
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex gap-3">
-                  {canPreview && (
-                    <Button 
-                      variant="outline"
-                      className="flex-1" 
+                {/* Password input for protected links - show only if not verified */}
+                {linkInfo.hasPassword && !isVerified && (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Enter password to unlock</label>
+                      <Input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && verifyPassword()}
+                        className={passwordError ? "border-destructive" : ""}
+                        disabled={isVerifying}
+                      />
+                      {passwordError && (
+                        <p className="text-sm text-destructive">{passwordError}</p>
+                      )}
+                    </div>
+                    <Button
+                      className="w-full"
                       size="lg"
-                      onClick={handlePreview}
+                      onClick={verifyPassword}
+                      disabled={isVerifying || !password.trim()}
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Preview
+                      {isVerifying ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Verifying...
+                        </>
+                      ) : (
+                        <>
+                          <Unlock className="h-4 w-4 mr-2" />
+                          Unlock File
+                        </>
+                      )}
                     </Button>
-                  )}
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                  </div>
+                )}
+
+                {/* Action buttons - show only if no password OR password verified */}
+                {(!linkInfo.hasPassword || isVerified) && (
+                  <div className="flex gap-3">
+                    {canPreview && (
                       <Button 
-                        className={canPreview ? "flex-1" : "w-full"}
+                        variant="outline"
+                        className="flex-1" 
                         size="lg"
-                        disabled={isDownloading}
+                        onClick={handlePreview}
                       >
-                        {isDownloading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Downloading...
-                          </>
-                        ) : (
-                          <>
-                            <Download className="h-4 w-4 mr-2" />
-                            Download
-                          </>
-                        )}
+                        <Eye className="h-4 w-4 mr-2" />
+                        Preview
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirm Download</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will use 1 of {linkInfo.downloadsRemaining} remaining downloads. 
-                          Once you confirm, the download will count even if you cancel the save dialog.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDownload}>
-                          <Download className="h-4 w-4 mr-2" />
-                          Download Now
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+                    )}
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          className={canPreview ? "flex-1" : "w-full"}
+                          size="lg"
+                          disabled={isDownloading}
+                        >
+                          {isDownloading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Downloading...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </>
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirm Download</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will use 1 of {linkInfo.downloadsRemaining} remaining downloads. 
+                            Once you confirm, the download will count even if you cancel the save dialog.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={download}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Download Now
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                )}
 
                 {/* Info text */}
                 <p className="text-xs text-center text-muted-foreground">
-                  {canPreview 
-                    ? "Preview doesn't count towards download limit. Use Preview to view the file first."
-                    : "File will be automatically deleted when download limit is reached or link expires."
+                  {linkInfo.hasPassword && !isVerified
+                    ? "Enter the password to unlock and access this file."
+                    : canPreview 
+                      ? "Preview doesn't count towards download limit. Use Preview to view the file first."
+                      : "File will be automatically deleted when download limit is reached or link expires."
                   }
                 </p>
               </CardContent>

@@ -36,6 +36,7 @@ export function useFileUpload() {
     currentFile,
     expiresInHours,
     downloadLimit,
+    password,
     setProgress,
     setStatus,
     setError,
@@ -82,6 +83,7 @@ export function useFileUpload() {
         downloadLimit,
         checksum,
         isAnonymous: !session?.user,
+        password: password || undefined,
       })
 
       return shareData.url

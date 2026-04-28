@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { Upload, FileIcon, X, Loader2 } from "lucide-react"
+import { Upload, FileIcon, X, Loader2, Lock } from "lucide-react"
 import { useUploadStore } from "@/lib/upload-store"
 import { useFileUpload } from "@/hooks/use-file-upload"
 import { useQuota } from "@/hooks/use-quota"
@@ -25,13 +25,16 @@ const MAX_SIZE_MB = 10 // Cloudinary free tier limit
 
 export function FileUploader() {
   const [isDragging, setIsDragging] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const {
     currentFile,
     expiresInHours,
     downloadLimit,
+    password,
     setFile,
     setExpiresInHours,
     setDownloadLimit,
+    setPassword,
     reset,
   } = useUploadStore()
 
@@ -195,6 +198,32 @@ export function FileUploader() {
                 }}
               />
             </div>
+          </div>
+          
+          {/* Password protection */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Lock className="h-4 w-4" />
+              {showPassword ? "Remove password protection" : "Add password protection (optional)"}
+            </button>
+            {showPassword && (
+              <div className="mt-2">
+                <Input
+                  type="password"
+                  placeholder="Enter password for this link"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="max-w-xs"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Recipients will need this password to download
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

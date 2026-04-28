@@ -48,6 +48,7 @@ export const uploadApi = {
     downloadLimit: number
     checksum: string
     isAnonymous: boolean
+    password?: string
   }) => api.post<{ url: string }>("/share", data),
 }
 
@@ -60,7 +61,23 @@ export const linkApi = {
       expiresAt: string
       downloadsRemaining: number
       downloadLimit: number
+      previewUrl: string | null
+      hasPassword: boolean
     }>(`/link/${code}`),
+
+  verifyPassword: (code: string, password: string) =>
+    api.post<{
+      verified: boolean
+      previewUrl: string
+    }>(`/link/${code}`, { password }),
+
+  download: (code: string, password?: string) =>
+    axios({
+      url: `/download/${code}`,
+      method: password ? "POST" : "GET",
+      data: password ? { password } : undefined,
+      responseType: "blob",
+    }),
 }
 
 export const dashboardApi = {

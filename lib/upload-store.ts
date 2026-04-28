@@ -25,6 +25,7 @@ interface UploadState {
   currentFile: UploadFile | null
   expiresInHours: number
   downloadLimit: number
+  password: string
   shareHistory: ShareHistoryItem[]
   setFile: (file: File) => void
   setProgress: (progress: number) => void
@@ -33,6 +34,7 @@ interface UploadState {
   setShareUrl: (url: string) => void
   setExpiresInHours: (hours: number) => void
   setDownloadLimit: (limit: number) => void
+  setPassword: (password: string) => void
   reset: () => void
   removeFromHistory: (id: string) => void
   clearHistory: () => void
@@ -44,6 +46,7 @@ export const useUploadStore = create<UploadState>()(
       currentFile: null,
       expiresInHours: 24,
       downloadLimit: 5,
+      password: "",
       shareHistory: [],
   
   setFile: (file) => set({ 
@@ -77,6 +80,8 @@ export const useUploadStore = create<UploadState>()(
   setExpiresInHours: (expiresInHours) => set({ expiresInHours }),
   
   setDownloadLimit: (downloadLimit) => set({ downloadLimit }),
+
+  setPassword: (password) => set({ password }),
   
   reset: () => set((state) => {
     // Add current file to history before resetting
@@ -99,6 +104,7 @@ export const useUploadStore = create<UploadState>()(
       currentFile: null,
       expiresInHours: 24,
       downloadLimit: 5,
+      password: "",
       shareHistory: newHistory,
     }
   }),
