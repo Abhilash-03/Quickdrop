@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
+import { useUploadStore } from "@/lib/upload-store"
 
 interface DeleteAccountDialogProps {
   open: boolean
@@ -141,6 +142,10 @@ export function DeleteAccountDialog({
 
     try {
       await axios.delete("/api/auth/delete-account")
+      
+      // Clear local share history
+      useUploadStore.getState().clearHistory()
+      
       toast.success("Account deleted successfully")
       onOpenChange(false)
       // Sign out and redirect

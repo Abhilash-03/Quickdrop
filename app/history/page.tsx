@@ -222,9 +222,17 @@ export default function HistoryPage() {
   }, [])
 
   const filteredHistory = useMemo(() => {
-    if (!searchQuery.trim()) return shareHistory
+    // First filter out expired items
+    const now = Date.now()
+    const activeItems = shareHistory.filter(item => {
+      const expiresAt = item.createdAt + (item.expiresInHours * 60 * 60 * 1000)
+      return expiresAt > now
+    })
+    
+    // Then apply search filter
+    if (!searchQuery.trim()) return activeItems
     const query = searchQuery.toLowerCase()
-    return shareHistory.filter(item => 
+    return activeItems.filter(item => 
       item.filename.toLowerCase().includes(query)
     )
   }, [shareHistory, searchQuery])
@@ -285,12 +293,12 @@ export default function HistoryPage() {
               <div>
                 <h1 className="text-xl sm:text-2xl font-semibold">History</h1>
                 <p className="text-sm text-muted-foreground hidden sm:block">
-                  {shareHistory.length} shared file{shareHistory.length !== 1 ? "s" : ""}
+                  {filteredHistory.length} active share{filteredHistory.length !== 1 ? "s" : ""}
                 </p>
               </div>
             </div>
             
-            {shareHistory.length > 0 && (
+            {filteredHistory.length > 0 && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
@@ -302,7 +310,7 @@ export default function HistoryPage() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Clear history?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will remove all {shareHistory.length} items. Your shared files will still be accessible via their links.
+                      This will remove all {filteredHistory.length} items from your history.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -317,7 +325,7 @@ export default function HistoryPage() {
           </div>
         </motion.div>
 
-        {shareHistory.length === 0 ? (
+        {filteredHistory.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -328,9 +336,9 @@ export default function HistoryPage() {
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-6">
                   <FolderOpen className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h2 className="text-lg font-semibold mb-2">No files shared yet</h2>
+                <h2 className="text-lg font-semibold mb-2">No active shares</h2>
                 <p className="text-muted-foreground text-sm mb-6 max-w-sm">
-                  Files you share will appear here for quick access to their links.
+                  {searchQuery ? "No files match your search." : "Files you share will appear here. Expired links are automatically removed."}
                 </p>
                 <Button asChild>
                   <Link href="/">Share a file</Link>

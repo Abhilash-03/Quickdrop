@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { Upload, LogOut, LayoutDashboard, User, History } from "lucide-react"
@@ -27,6 +28,15 @@ export function Header() {
   const { openLogin } = useAuthModal()
   const shareHistory = useUploadStore((state) => state.shareHistory)
 
+  // Count only active (non-expired) shares
+  const activeShareCount = useMemo(() => {
+    const now = Date.now()
+    return shareHistory.filter(item => {
+      const expiresAt = item.createdAt + (item.expiresInHours * 60 * 60 * 1000)
+      return expiresAt > now
+    }).length
+  }, [shareHistory])
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between mx-auto px-4">
@@ -44,9 +54,9 @@ export function Header() {
                 <Button variant="ghost" size="icon" asChild className="relative">
                   <Link href="/history">
                     <History className="h-5 w-5" />
-                    {shareHistory.length > 0 && (
+                    {activeShareCount > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-[10px] font-semibold text-primary-foreground flex items-center justify-center shadow-sm ring-2 ring-background">
-                        {shareHistory.length > 99 ? "99+" : shareHistory.length}
+                        {activeShareCount > 99 ? "99+" : activeShareCount}
                       </span>
                     )}
                   </Link>
