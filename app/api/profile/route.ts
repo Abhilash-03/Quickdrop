@@ -69,6 +69,7 @@ export async function GET() {
       email: user.email,
       image: user.image,
       provider,
+      hasPassword: !!user.passwordHash,
       createdAt: user.createdAt.toISOString(),
     },
     stats: {
