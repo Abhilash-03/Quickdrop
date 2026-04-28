@@ -78,6 +78,19 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-4">
+            <h2 className="text-xl font-semibold">Account Deletion by User</h2>
+            <p className="text-muted-foreground">
+              You may delete your account at any time from your profile settings. Upon deletion:
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2">
+              <li>All your files will be permanently deleted from our servers</li>
+              <li>All active share links will become invalid</li>
+              <li>Your account information will be removed from our database</li>
+              <li>This action cannot be undone</li>
+            </ul>
+          </section>
+
+          <section className="space-y-4">
             <h2 className="text-xl font-semibold">Changes to Terms</h2>
             <p className="text-muted-foreground">
               We may update these terms at any time. Continued use of QuickDrop after changes 

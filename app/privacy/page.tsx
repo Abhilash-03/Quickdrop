@@ -27,6 +27,28 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-4">
+            <h2 className="text-xl font-semibold">OAuth Sign-In Data</h2>
+            <p className="text-muted-foreground">
+              When you sign in with Google or GitHub, we receive:
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2">
+              <li><strong>Google:</strong> Your name, email address, and profile picture</li>
+              <li><strong>GitHub:</strong> Your username, email address, and profile picture</li>
+            </ul>
+            <p className="text-muted-foreground">
+              We do not receive or store your Google/GitHub password. Authentication is handled securely by these providers.
+            </p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-xl font-semibold">Password Security</h2>
+            <p className="text-muted-foreground">
+              If you create an account with email and password, your password is securely hashed using 
+              industry-standard bcrypt encryption before storage. We never store or have access to your plain-text password.
+            </p>
+          </section>
+
+          <section className="space-y-4">
             <h2 className="text-xl font-semibold">How We Use Your Information</h2>
             <ul className="list-disc list-inside text-muted-foreground space-y-2">
               <li>To provide file sharing functionality</li>
@@ -59,6 +81,22 @@ export default function PrivacyPage() {
             <p className="text-muted-foreground">
               You can delete your account and all associated data at any time from your profile settings.
               Anonymous uploads are automatically deleted based on expiration settings.
+            </p>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-xl font-semibold">Account Deletion</h2>
+            <p className="text-muted-foreground">
+              When you delete your account, the following data is permanently removed:
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2">
+              <li>All your uploaded files from our cloud storage (Cloudinary)</li>
+              <li>All share links associated with your files</li>
+              <li>Your account information (email, name, profile picture)</li>
+              <li>Your upload quota and usage history</li>
+            </ul>
+            <p className="text-muted-foreground">
+              This action is irreversible. Local browser history of your shares is cleared separately from your device.
             </p>
           </section>
 
