@@ -20,7 +20,6 @@ import {
   Settings,
   ChevronRight,
   BadgeCheck,
-  TrendingUp,
   Activity,
   KeyRound,
   Trash2,
@@ -94,48 +93,143 @@ const statCardVariants = {
   },
 }
 
+const statConfigs = {
+  uploads: {
+    bgGlow: "bg-blue-500/30",
+    borderGlow: "shadow-blue-500/10",
+    iconBg: "bg-blue-500/15",
+    iconColor: "text-blue-500",
+    ringColor: "stroke-blue-500",
+    accentColor: "text-blue-500",
+  },
+  shares: {
+    bgGlow: "bg-violet-500/30",
+    borderGlow: "shadow-violet-500/10",
+    iconBg: "bg-violet-500/15",
+    iconColor: "text-violet-500",
+    ringColor: "stroke-violet-500",
+    accentColor: "text-violet-500",
+  },
+  active: {
+    bgGlow: "bg-emerald-500/30",
+    borderGlow: "shadow-emerald-500/10",
+    iconBg: "bg-emerald-500/15",
+    iconColor: "text-emerald-500",
+    ringColor: "stroke-emerald-500",
+    accentColor: "text-emerald-500",
+  },
+  downloads: {
+    bgGlow: "bg-amber-500/30",
+    borderGlow: "shadow-amber-500/10",
+    iconBg: "bg-amber-500/15",
+    iconColor: "text-amber-500",
+    ringColor: "stroke-amber-500",
+    accentColor: "text-amber-500",
+  },
+}
+
+function CircularProgress({ 
+  value, 
+  max, 
+  colorClass 
+}: { 
+  value: number
+  max: number
+  colorClass: string 
+}) {
+  const percentage = max > 0 ? Math.min((value / max) * 100, 100) : 0
+  const circumference = 2 * Math.PI * 18 // radius = 18
+  const strokeDashoffset = circumference - (percentage / 100) * circumference
+
+  return (
+    <svg className="h-12 w-12 sm:h-14 sm:w-14 -rotate-90" viewBox="0 0 44 44">
+      <circle
+        cx="22"
+        cy="22"
+        r="18"
+        fill="none"
+        strokeWidth="4"
+        className="stroke-muted/30"
+      />
+      <motion.circle
+        cx="22"
+        cy="22"
+        r="18"
+        fill="none"
+        strokeWidth="4"
+        strokeLinecap="round"
+        className={colorClass}
+        initial={{ strokeDashoffset: circumference }}
+        animate={{ strokeDashoffset }}
+        transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+        style={{ strokeDasharray: circumference }}
+      />
+    </svg>
+  )
+}
+
 function StatCard({ 
   icon: Icon, 
   label, 
   value, 
-  color,
+  variant,
+  showRing = false,
+  ringValue = 0,
+  ringMax = 100,
   delay = 0 
 }: { 
   icon: React.ElementType
   label: string
   value: number | string
-  color: string
+  variant: keyof typeof statConfigs
+  showRing?: boolean
+  ringValue?: number
+  ringMax?: number
   delay?: number
 }) {
+  const config = statConfigs[variant]
+  
   return (
     <motion.div
       variants={statCardVariants}
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -4, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
-      <Card className="group hover:shadow-lg transition-all duration-300 hover:border-primary/30 h-full">
-        <CardContent className="p-3 sm:p-5">
-          <div className="flex items-start justify-between mb-2 sm:mb-3">
-            <div className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-zinc-900 dark:bg-zinc-100`}>
-              <Icon className={`h-4 w-4 sm:h-5 sm:w-5 text-zinc-300 dark:text-zinc-600`} />
+      <Card className={`group hover:shadow-xl transition-all duration-300 border-0 shadow-md h-full overflow-hidden relative bg-card`}>
+        {/* Smooth radial glow */}
+        <div className={`absolute -top-12 -left-12 w-32 h-32 ${config.bgGlow} rounded-full blur-3xl opacity-60`} />
+        <div className={`absolute -bottom-8 -right-8 w-24 h-24 ${config.bgGlow} rounded-full blur-2xl opacity-40`} />
+        
+        <CardContent className="p-4 sm:p-5 relative z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className={`inline-flex p-2.5 sm:p-3 rounded-xl ${config.iconBg} mb-3`}>
+                <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${config.iconColor}`} />
+              </div>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: delay + 0.2 }}
+                className={`text-2xl sm:text-4xl font-bold tracking-tight ${config.accentColor}`}
+              >
+                {value}
+              </motion.p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium">{label}</p>
             </div>
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: delay + 0.3, type: "spring" }}
-            >
-              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
-            </motion.div>
+            
+            {showRing && (
+              <div className="relative flex items-center justify-center">
+                <CircularProgress 
+                  value={ringValue} 
+                  max={ringMax} 
+                  colorClass={config.ringColor} 
+                />
+                <span className={`absolute text-[10px] sm:text-xs font-semibold ${config.accentColor}`}>
+                  {ringMax > 0 ? Math.round((ringValue / ringMax) * 100) : 0}%
+                </span>
+              </div>
+            )}
           </div>
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: delay + 0.2 }}
-            className="text-xl sm:text-3xl font-bold tracking-tight"
-          >
-            {value}
-          </motion.p>
-          <p className="text-[10px] sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{label}</p>
         </CardContent>
       </Card>
     </motion.div>
@@ -350,28 +444,31 @@ export default function ProfilePage() {
                 icon={Upload}
                 label="Total Uploads"
                 value={profile?.stats.totalFiles || 0}
-                color="blue"
+                variant="uploads"
                 delay={0}
               />
               <StatCard
                 icon={Share2}
                 label="Total Shares"
                 value={profile?.stats.totalShares || 0}
-                color="purple"
+                variant="shares"
                 delay={0.1}
               />
               <StatCard
                 icon={Clock}
                 label="Active Links"
                 value={profile?.stats.activeShares || 0}
-                color="green"
+                variant="active"
+                showRing
+                ringValue={profile?.stats.activeShares || 0}
+                ringMax={profile?.stats.totalShares || 1}
                 delay={0.2}
               />
               <StatCard
                 icon={Download}
                 label="Total Downloads"
                 value={profile?.stats.totalDownloads || 0}
-                color="orange"
+                variant="downloads"
                 delay={0.3}
               />
             </div>
@@ -428,8 +525,9 @@ export default function ProfilePage() {
               <Settings className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               Quick Actions
             </h2>
-            <Card>
-              <CardContent className="p-1.5 sm:p-2">
+            <Card className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="px-1.5 sm:px-2 py-1.5 sm:py-2 space-y-0">
                 <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <Link
                     href="/dashboard"
@@ -448,7 +546,7 @@ export default function ProfilePage() {
                   </Link>
                 </motion.div>
 
-                <Separator className="mx-3 sm:mx-4" />
+                <div className="px-3 sm:px-4"><Separator /></div>
 
                 <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <Link
@@ -468,7 +566,7 @@ export default function ProfilePage() {
                   </Link>
                 </motion.div>
 
-                <Separator className="mx-3 sm:mx-4" />
+                <div className="px-3 sm:px-4"><Separator /></div>
 
                 <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <button
@@ -488,7 +586,7 @@ export default function ProfilePage() {
                   </button>
                 </motion.div>
 
-                <Separator className="mx-3 sm:mx-4" />
+                <div className="px-3 sm:px-4"><Separator /></div>
 
                 <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <button
@@ -508,7 +606,7 @@ export default function ProfilePage() {
                   </button>
                 </motion.div>
 
-                <Separator className="mx-3 sm:mx-4" />
+                <div className="px-3 sm:px-4"><Separator /></div>
 
                 <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <button
@@ -527,6 +625,7 @@ export default function ProfilePage() {
                     <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                   </button>
                 </motion.div>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
