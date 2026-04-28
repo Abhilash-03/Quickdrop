@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Activity,
   KeyRound,
+  Trash2,
 } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -34,6 +35,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { ChangePasswordDialog } from "@/components/change-password-dialog"
+import { DeleteAccountDialog } from "@/components/delete-account-dialog"
 
 interface ProfileData {
   user: {
@@ -155,6 +157,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [changePasswordOpen, setChangePasswordOpen] = useState(false)
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false)
 
   useEffect(() => {
     if (authStatus === "unauthenticated") {
@@ -489,6 +492,26 @@ export default function ProfilePage() {
 
                 <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
                   <button
+                    onClick={() => setDeleteAccountOpen(true)}
+                    className="w-full flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-destructive/5 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-destructive/10">
+                        <Trash2 className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm sm:text-base text-destructive">Delete Account</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Permanently delete your account</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                  </button>
+                </motion.div>
+
+                <Separator className="mx-3 sm:mx-4" />
+
+                <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.99 }}>
+                  <button
                     onClick={() => signOut({ callbackUrl: "/" })}
                     className="w-full flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-destructive/5 transition-colors text-left"
                   >
@@ -515,6 +538,14 @@ export default function ProfilePage() {
       <ChangePasswordDialog
         open={changePasswordOpen}
         onOpenChange={setChangePasswordOpen}
+        hasPassword={profile?.user.hasPassword || false}
+        userEmail={profile?.user.email || ""}
+        provider={profile?.user.provider || null}
+      />
+
+      <DeleteAccountDialog
+        open={deleteAccountOpen}
+        onOpenChange={setDeleteAccountOpen}
         hasPassword={profile?.user.hasPassword || false}
         userEmail={profile?.user.email || ""}
         provider={profile?.user.provider || null}
