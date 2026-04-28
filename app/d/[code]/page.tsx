@@ -186,7 +186,7 @@ export default function DownloadPage() {
             </Card>
           )}
 
-          {linkInfo && (
+          {linkInfo && !error && (
             <Card>
               <CardHeader className="text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mx-auto mb-4">

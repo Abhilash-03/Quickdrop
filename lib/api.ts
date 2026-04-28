@@ -78,6 +78,11 @@ export const linkApi = {
       data: password ? { password } : undefined,
       responseType: "blob",
     }),
+
+  checkStatuses: (codes: string[]) =>
+    api.post<{
+      statuses: Record<string, { active: boolean; reason?: string }>
+    }>("/links/status", { codes }),
 }
 
 export const dashboardApi = {

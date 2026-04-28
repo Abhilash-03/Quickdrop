@@ -15,10 +15,12 @@ import {
   ArrowLeft,
   FolderOpen,
   Search,
+  Loader2,
 } from "lucide-react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useUploadStore, type ShareHistoryItem } from "@/lib/upload-store"
+import { useSyncHistory } from "@/hooks/use-sync-history"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -217,6 +219,9 @@ export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const { shareHistory, removeFromHistory, clearHistory } = useUploadStore()
 
+  // Sync with server to remove expired/limit-reached items
+  const { isLoading: isSyncing } = useSyncHistory(shareHistory)
+
   useEffect(() => {
     setHydrated(true)
   }, [])
@@ -292,8 +297,14 @@ export default function HistoryPage() {
               </Button>
               <div>
                 <h1 className="text-xl sm:text-2xl font-semibold">History</h1>
-                <p className="text-sm text-muted-foreground hidden sm:block">
+                <p className="text-sm text-muted-foreground hidden sm:flex items-center gap-2">
                   {filteredHistory.length} active share{filteredHistory.length !== 1 ? "s" : ""}
+                  {isSyncing && (
+                    <span className="inline-flex items-center gap-1 text-xs">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      syncing
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
