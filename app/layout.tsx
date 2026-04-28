@@ -6,6 +6,7 @@ import { AuthProvider } from "@/components/auth-provider";
 import { QueryProvider } from "@/components/query-provider";
 import { AuthModal } from "@/components/auth-modal";
 import { Toaster } from "@/components/ui/sonner";
+import { GlobalDropZone } from "@/components/global-drop-zone";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
           <AuthProvider>
             <QueryProvider>
               {children}
+              <GlobalDropZone />
             </QueryProvider>
             <AuthModal />
           </AuthProvider>
