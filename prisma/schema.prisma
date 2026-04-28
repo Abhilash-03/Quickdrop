@@ -47,6 +47,7 @@ model ShareLink {
     downloadLimit Int      @default(1)
     downloadCount Int      @default(0)
     status        String   @default("active") // active|expired|deleted
+    passwordHash  String?
     createdAt     DateTime @default(now())
     uploaderId    String?  @db.ObjectId
     uploader      User?    @relation(fields: [uploaderId], references: [id])

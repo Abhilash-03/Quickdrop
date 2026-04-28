@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma"
 import { nanoid } from "nanoid"
+import bcrypt from "bcrypt"
 
 const bodySchema = z.object({
     filename: z.string(),
@@ -15,6 +16,7 @@ const bodySchema = z.object({
     downloadLimit: z.number().min(1).max(100),
     checksum: z.string(),
     isAnonymous: z.boolean(),
+    password: z.string().optional(),
 })
 
 const DAILY_LIMITS = {
@@ -135,13 +137,21 @@ export async function POST(req: NextRequest) {
         })
 
         const code = nanoid(10);
+        
+        // Hash password if provided
+        let passwordHash: string | undefined;
+        if (data.password && data.password.trim()) {
+            passwordHash = await bcrypt.hash(data.password, 10);
+        }
+        
         const share = await prisma.shareLink.create({
             data: {
                 fileId: file.id,
                 code,
                 expiresAt: new Date(Date.now() + data.expiresInHours * 3600_000),
                 downloadLimit: data.downloadLimit,
-                uploaderId: userId
+                uploaderId: userId,
+                passwordHash,
             }
         })
 
