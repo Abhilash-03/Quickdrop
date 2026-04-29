@@ -167,7 +167,7 @@ export function FileUploader() {
       </div>
 
       {/* Upload options */}
-      {currentFile.status === "idle" && (
+      { (
         <div className="space-y-4 mb-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -191,10 +191,15 @@ export function FileUploader() {
                 type="number"
                 min={1}
                 max={100}
-                value={downloadLimit}
+                value={downloadLimit || ""}
                 onChange={(e) => {
+                  const val = e.target.value === "" ? 0 : Number(e.target.value)
+                  setDownloadLimit(val)
+                }}
+                onBlur={(e) => {
                   const val = Number(e.target.value)
-                  setDownloadLimit(Math.min(100, Math.max(1, val || 1)))
+                  if (!val || val < 1) setDownloadLimit(1)
+                  else if (val > 100) setDownloadLimit(100)
                 }}
               />
             </div>
@@ -219,7 +224,7 @@ export function FileUploader() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="max-w-xs"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1 text-left">
                   Recipients will need this password to download
                 </p>
               </div>

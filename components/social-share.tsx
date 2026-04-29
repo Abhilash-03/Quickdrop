@@ -34,6 +34,17 @@ import {
 } from "@/components/ui/tooltip"
 import { toast } from "sonner"
 
+// Custom icons for platforms not in react-share
+const SlackIcon = ({ size = 36 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
+    <circle cx="32" cy="32" r="32" fill="#4A154B" />
+    <path d="M26.5 33.5a3 3 0 1 1-3-3h3v3zm1.5 0a3 3 0 1 1 6 0v7.5a3 3 0 1 1-6 0v-7.5z" fill="#E01E5A" />
+    <path d="M31 23.5a3 3 0 1 1 3-3v3h-3zm0 1.5a3 3 0 1 1 0 6h-7.5a3 3 0 1 1 0-6H31z" fill="#36C5F0" />
+    <path d="M41 28a3 3 0 1 1 3 3h-3v-3zm-1.5 0a3 3 0 1 1-6 0v-7.5a3 3 0 1 1 6 0V28z" fill="#2EB67D" />
+    <path d="M36.5 41a3 3 0 1 1-3 3v-3h3zm0-1.5a3 3 0 1 1 0-6H44a3 3 0 1 1 0 6h-7.5z" fill="#ECB22E" />
+  </svg>
+)
+
 interface SocialShareProps {
   url: string
   title?: string
@@ -43,13 +54,18 @@ interface SocialShareProps {
 }
 
 const socialButtons = [
-  { Button: WhatsappShareButton, Icon: WhatsappIcon, name: "WhatsApp", bg: "bg-[#25D366]" },
-  { Button: TelegramShareButton, Icon: TelegramIcon, name: "Telegram", bg: "bg-[#0088cc]" },
-  { Button: TwitterShareButton, Icon: XIcon, name: "X", bg: "bg-black dark:bg-white dark:invert" },
-  { Button: FacebookShareButton, Icon: FacebookIcon, name: "Facebook", bg: "bg-[#1877F2]" },
-  { Button: RedditShareButton, Icon: RedditIcon, name: "Reddit", bg: "bg-[#FF4500]" },
-  { Button: LinkedinShareButton, Icon: LinkedinIcon, name: "LinkedIn", bg: "bg-[#0A66C2]" },
-  { Button: EmailShareButton, Icon: EmailIcon, name: "Email", bg: "bg-[#EA4335]" },
+  { Button: WhatsappShareButton, Icon: WhatsappIcon, name: "WhatsApp" },
+  { Button: TelegramShareButton, Icon: TelegramIcon, name: "Telegram" },
+  { Button: TwitterShareButton, Icon: XIcon, name: "X" },
+  { Button: FacebookShareButton, Icon: FacebookIcon, name: "Facebook" },
+  { Button: RedditShareButton, Icon: RedditIcon, name: "Reddit" },
+  { Button: LinkedinShareButton, Icon: LinkedinIcon, name: "LinkedIn" },
+  { Button: EmailShareButton, Icon: EmailIcon, name: "Email" },
+]
+
+// Custom share buttons for platforms without react-share support
+const customShareButtons = [
+  { name: "Slack", Icon: SlackIcon, type: "url" as const },
 ]
 
 export function SocialShare({ 
@@ -70,6 +86,23 @@ export function SocialShare({
       setTimeout(() => setCopied(false), 2000)
     } catch {
       toast.error("Failed to copy")
+    }
+  }
+
+  const handleCustomShare = async (platform: string, type: "url" | "copy") => {
+    if (type === "url" && platform === "Slack") {
+      const slackUrl = `https://slack.com/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`
+      window.open(slackUrl, "_blank", "noopener,noreferrer")
+      setOpen(false)
+    } else {
+      // Copy to clipboard for Instagram and Quora
+      try {
+        await navigator.clipboard.writeText(url)
+        toast.success(`Link copied! Paste it on ${platform}`)
+        setOpen(false)
+      } catch {
+        toast.error("Failed to copy")
+      }
     }
   }
 
@@ -204,7 +237,7 @@ export function SocialShare({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="grid grid-cols-4 sm:grid-cols-7 gap-3 sm:gap-2"
+            className="grid grid-cols-5 gap-3 sm:gap-2"
           >
             {socialButtons.map(({ Button: SocialButton, Icon, name }, index) => (
               <TooltipProvider key={name} delayDuration={100}>
@@ -231,6 +264,33 @@ export function SocialShare({
                       >
                         <Icon size={36} round />
                       </SocialButton>
+                    </motion.div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs">
+                    {name}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+            {customShareButtons.map(({ name, Icon, type }, index) => (
+              <TooltipProvider key={name} delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ 
+                        delay: 0.35 + (socialButtons.length + index) * 0.05,
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20
+                      }}
+                      whileHover={{ scale: 1.15, y: -4 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="flex justify-center cursor-pointer"
+                      onClick={() => handleCustomShare(name, type)}
+                    >
+                      <Icon size={36} />
                     </motion.div>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="text-xs">
