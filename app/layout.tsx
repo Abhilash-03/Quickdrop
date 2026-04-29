@@ -18,11 +18,44 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://quickdrop-flash.vercel.app";
+
 export const metadata: Metadata = {
-  title: "QuickDrop - Fast & Secure File Sharing",
-  description: "Share files instantly with expiring links. Upload, share, and auto-delete - simple, fast, and secure.",
-  icons: {
-    icon: "/favicon.svg",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "QuickDrop - Fast & Secure File Sharing",
+    template: "%s | QuickDrop",
+  },
+  description: "Share files instantly with expiring links. Upload, share, and auto-delete - simple, fast, and secure. No signup required.",
+  keywords: ["file sharing", "secure upload", "expiring links", "file transfer", "quick share", "temporary files", "auto-delete"],
+  authors: [{ name: "QuickDrop" }],
+  creator: "QuickDrop",
+  publisher: "QuickDrop",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  manifest: "/site.webmanifest",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteUrl,
+    siteName: "QuickDrop",
+    title: "QuickDrop - Fast & Secure File Sharing",
+    description: "Share files instantly with expiring links. Upload, share, and auto-delete - simple, fast, and secure.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "QuickDrop - Fast & Secure File Sharing",
+    description: "Share files instantly with expiring links. Upload, share, and auto-delete - simple, fast, and secure.",
+    creator: "@quickdrop",
   },
 };
 
