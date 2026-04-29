@@ -33,9 +33,11 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  // Delete from Cloudinary
+  // Delete from Cloudinary with correct resource type
   try {
-    await cloudinary.uploader.destroy(share.file.publicId)
+    const isRawFile = !share.file.mime.startsWith("image/") && !share.file.mime.startsWith("video/")
+    const resourceType = isRawFile ? "raw" : (share.file.mime.startsWith("video/") ? "video" : "image")
+    await cloudinary.uploader.destroy(share.file.publicId, { resource_type: resourceType })
   } catch (error) {
     console.error("Cloudinary delete error:", error)
   }

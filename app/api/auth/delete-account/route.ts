@@ -22,13 +22,15 @@ export async function DELETE() {
     // Get all user's files to delete from Cloudinary
     const files = await prisma.file.findMany({
       where: { uploaderId: userId },
-      select: { id: true, publicId: true },
+      select: { id: true, publicId: true, mime: true },
     })
 
-    // Delete files from Cloudinary
+    // Delete files from Cloudinary with correct resource type
     const deletePromises = files.map(async (file) => {
       try {
-        await cloudinary.uploader.destroy(file.publicId)
+        const isRawFile = !file.mime.startsWith("image/") && !file.mime.startsWith("video/")
+        const resourceType = isRawFile ? "raw" : (file.mime.startsWith("video/") ? "video" : "image")
+        await cloudinary.uploader.destroy(file.publicId, { resource_type: resourceType })
       } catch (error) {
         console.error(`Failed to delete file ${file.publicId} from Cloudinary:`, error)
       }

@@ -1,6 +1,23 @@
 import { prisma } from "@/lib/prisma"
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcrypt"
+import { v2 as cloudinary } from "cloudinary"
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+})
+
+// Generate signed URL for raw files
+function getSignedUrl(publicId: string): string {
+  return cloudinary.url(publicId, {
+    resource_type: "raw",
+    type: "upload",
+    secure: true,
+    sign_url: true,
+  })
+}
 
 // Get share link info without downloading
 export async function GET(
@@ -30,6 +47,12 @@ export async function GET(
   const downloadsRemaining = link.downloadLimit - link.downloadCount
   const hasPassword = !!link.passwordHash
 
+  // Generate signed URL for raw files (PDFs, etc.)
+  const isRawFile = !link.file.mime.startsWith("image/") && !link.file.mime.startsWith("video/")
+  const previewUrl = isRawFile 
+    ? getSignedUrl(link.file.publicId)
+    : link.file.secureUrl
+
   return NextResponse.json({
     filename: link.file.filename,
     mime: link.file.mime,
@@ -38,7 +61,7 @@ export async function GET(
     downloadsRemaining,
     downloadLimit: link.downloadLimit,
     // Don't expose preview URL for password-protected links
-    previewUrl: hasPassword ? null : link.file.secureUrl,
+    previewUrl: hasPassword ? null : previewUrl,
     hasPassword,
   })
 }
@@ -84,9 +107,15 @@ export async function POST(
     return NextResponse.json({ error: "Invalid password" }, { status: 401 })
   }
 
+  // Generate signed URL for raw files (PDFs, etc.)
+  const isRawFile = !link.file.mime.startsWith("image/") && !link.file.mime.startsWith("video/")
+  const previewUrl = isRawFile 
+    ? getSignedUrl(link.file.publicId)
+    : link.file.secureUrl
+
   // Password correct - return preview URL
   return NextResponse.json({
     verified: true,
-    previewUrl: link.file.secureUrl,
+    previewUrl,
   })
 }
