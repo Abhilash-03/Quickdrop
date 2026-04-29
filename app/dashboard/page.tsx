@@ -280,7 +280,7 @@ function FileRow({
 }
 
 export default function DashboardPage() {
-  const { data: session, status: authStatus } = useSession()
+  const { status: authStatus } = useSession()
   const router = useRouter()
   const { openLogin } = useAuthModal()
   const [copiedId, setCopiedId] = useState<string | null>(null)
