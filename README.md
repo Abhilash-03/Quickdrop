@@ -1,8 +1,9 @@
 # QuickDrop
 
-A modern, fast file sharing application built with Next.js 15. Share files instantly with secure, auto-expiring links.
+A modern, fast file sharing application built with Next.js 16. Share files instantly with secure, auto-expiring links.
 
-![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+[![Live Demo](https://img.shields.io/badge/Demo-quickdrop--flash.vercel.app-blue?style=flat-square)](https://quickdrop-flash.vercel.app)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38B2AC?logo=tailwind-css)
 ![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma)
@@ -18,7 +19,7 @@ A modern, fast file sharing application built with Next.js 15. Share files insta
 - **QR Codes** — Generate QR codes for easy mobile sharing
 
 ### Sharing
-- **Social Sharing** — Share via WhatsApp, Telegram, X, Facebook, Reddit, LinkedIn, Email
+- **Social Sharing** — Share via WhatsApp, Telegram, X, Facebook, Reddit, LinkedIn, Slack, Email
 - **Copy Link** — One-click copy to clipboard
 
 ### User Experience
@@ -28,6 +29,12 @@ A modern, fast file sharing application built with Next.js 15. Share files insta
 - **Profile & Stats** — View upload statistics and manage account settings
 - **Dark/Light Mode** — Automatic theme switching based on system preference
 - **Fully Responsive** — Clean, minimal UI on all devices
+- **Blur Backdrop** — Beautiful blurred background on all modals
+
+### SEO & Social
+- **Dynamic OG Images** — Auto-generated Open Graph images for social sharing
+- **Twitter Cards** — Rich Twitter card previews
+- **PWA Ready** — Web app manifest for installable experience
 
 ### Limits & Quotas
 - **10MB File Limit** — Support for images, PDFs, ZIPs, and more
@@ -38,15 +45,15 @@ A modern, fast file sharing application built with Next.js 15. Share files insta
 
 | Category | Technology |
 |----------|------------|
-| **Framework** | Next.js 15 (App Router, Turbopack) |
+| **Framework** | Next.js 16 (App Router, Turbopack) |
 | **Language** | TypeScript 5 |
 | **Database** | MongoDB with Prisma ORM |
 | **Storage** | Cloudinary |
-| **Auth** | NextAuth.js (Google, GitHub, Credentials) |
+| **Auth** | Auth.js v5 (Google, GitHub, Credentials) |
 | **Styling** | Tailwind CSS 4 + shadcn/ui |
 | **Animations** | Framer Motion |
 | **State** | Zustand (with localStorage persistence) |
-| **Data Fetching** | TanStack React Query |
+| **Data Fetching** | TanStack React Query + Axios |
 | **Validation** | Zod |
 
 ## Getting Started
@@ -81,6 +88,9 @@ CLOUDINARY_CLOUD_NAME="..."
 CLOUDINARY_API_KEY="..."
 CLOUDINARY_API_SECRET="..."
 CLOUDINARY_UPLOAD_FOLDER="file-share/uploads"
+
+# App URL (for SEO)
+NEXT_PUBLIC_APP_URL="https://your-domain.vercel.app"
 ```
 
 ### Installation
@@ -113,6 +123,10 @@ npm start
 ```
 app/
 ├── page.tsx              # Home page with file uploader
+├── opengraph-image.tsx   # Dynamic OG image generation
+├── twitter-image.tsx     # Dynamic Twitter card image
+├── icon.tsx              # Dynamic favicon
+├── apple-icon.tsx        # Apple touch icon
 ├── dashboard/            # User's shared files (auth required)
 ├── history/              # Local share history
 ├── profile/              # User profile & settings
@@ -121,7 +135,7 @@ app/
 ├── auth/                 # Auth-related pages
 │   └── popup-callback/   # OAuth popup callback
 ├── api/
-│   ├── auth/             # NextAuth + custom auth endpoints
+│   ├── auth/             # Auth.js + custom auth endpoints
 │   ├── upload/sign/      # Cloudinary signature endpoint
 │   ├── share/            # Create & manage share links
 │   ├── links/            # Link status management
@@ -142,10 +156,17 @@ hooks/
 ├── use-quota.ts          # Quota management
 lib/
 ├── prisma.ts             # Prisma client instance
-├── auth.ts               # NextAuth configuration
+├── auth.ts               # Auth.js configuration
 ├── upload-store.ts       # Zustand store
 ├── api.ts                # API utilities
 prisma/
 └── schema.prisma         # Database schema
+public/
+├── favicon.svg           # SVG favicon
+└── site.webmanifest      # PWA manifest
 ```
+
+## License
+
+MIT
 
