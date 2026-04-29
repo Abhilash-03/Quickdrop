@@ -65,22 +65,22 @@ Create a `.env` file in the root directory:
 # Database
 DATABASE_URI="mongodb+srv://..."
 
-# NextAuth
-NEXTAUTH_SECRET="your-secret-key"
-NEXTAUTH_URL="http://localhost:3000"
+# Auth.js
+AUTH_SECRET="your-secret-key"
 
 # Google OAuth
 GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
 
 # GitHub OAuth
-GITHUB_ID="..."
-GITHUB_SECRET="..."
+GITHUB_CLIENT_ID="..."
+GITHUB_CLIENT_SECRET="..."
 
 # Cloudinary
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="..."
+CLOUDINARY_CLOUD_NAME="..."
 CLOUDINARY_API_KEY="..."
 CLOUDINARY_API_SECRET="..."
+CLOUDINARY_UPLOAD_FOLDER="file-share/uploads"
 ```
 
 ### Installation

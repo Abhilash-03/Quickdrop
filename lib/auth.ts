@@ -1,22 +1,21 @@
-import { AuthOptions } from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import GitHubProvider from "next-auth/providers/github"
-import CredentialsProvider from "next-auth/providers/credentials"
+import NextAuth from "next-auth"
+import Google from "next-auth/providers/google"
+import GitHub from "next-auth/providers/github"
+import Credentials from "next-auth/providers/credentials"
 import bcrypt from "bcrypt"
 import { prisma } from "@/lib/prisma"
 
-export const authOptions: AuthOptions = {
+export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
-    GoogleProvider({
+    Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-    GitHubProvider({
+    GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
     }),
-    CredentialsProvider({
-      name: "credentials",
+    Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
@@ -27,14 +26,14 @@ export const authOptions: AuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: credentials.email as string },
         })
 
         if (!user || !user.passwordHash) {
           throw new Error("Invalid credentials")
         }
 
-        const isValid = await bcrypt.compare(credentials.password, user.passwordHash)
+        const isValid = await bcrypt.compare(credentials.password as string, user.passwordHash)
 
         if (!isValid) {
           throw new Error("Invalid credentials")
@@ -108,5 +107,4 @@ export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET,
-}
+})

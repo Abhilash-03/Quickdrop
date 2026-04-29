@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
 import bcrypt from "bcrypt"
-import { authOptions } from "@/lib/auth"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // Verify user identity via password
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
