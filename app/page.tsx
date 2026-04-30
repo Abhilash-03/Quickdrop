@@ -1,12 +1,14 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { FileUploader } from "@/components/file-uploader"
 import { ShareLinkDialog } from "@/components/share-link-dialog"
-import { Shield, Clock, Zap, Upload, Link2, Trash2, Wifi } from "lucide-react"
-import { motion } from "framer-motion"
+import { Shield, Clock, Zap, Upload, Link2, Trash2, Cloud, Send, ArrowRight, Users, Wifi } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
 
 // Animation variants
 const fadeInUp = {
@@ -94,6 +96,26 @@ function Step({ number, icon: Icon, title, description, isLast }: {
 }
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<"drop" | "flash">("drop")
+
+  // Prevent drag events from affecting FileUploader when Flash tab is active
+  useEffect(() => {
+    if (activeTab !== "flash") return
+    
+    const preventDrag = (e: DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    
+    document.addEventListener("dragover", preventDrag)
+    document.addEventListener("drop", preventDrag)
+    
+    return () => {
+      document.removeEventListener("dragover", preventDrag)
+      document.removeEventListener("drop", preventDrag)
+    }
+  }, [activeTab])
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -150,33 +172,135 @@ export default function Home() {
               </motion.p>
             </motion.div>
 
-            {/* Upload Area */}
+            {/* Upload Area with Tabs */}
             <motion.div 
               variants={fadeInUp}
               className="w-full max-w-xl mt-4"
             >
-              <div className="relative">
-                {/* Glow effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-xl opacity-50" />
-                <div className="relative">
-                  <FileUploader />
-                </div>
+              {/* Tab Switcher */}
+              <div className="flex p-1 bg-muted rounded-xl mb-6">
+                <button
+                  onClick={() => setActiveTab("drop")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all",
+                    activeTab === "drop"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Cloud className="h-5 w-5" />
+                  <span>Drop</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("flash")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all",
+                    activeTab === "flash"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Zap className="h-5 w-5" />
+                  <span>Flash</span>
+                </button>
               </div>
 
-              {/* P2P Option */}
-              <div className="mt-6 flex items-center gap-4">
-                <div className="flex-1 h-px bg-border" />
-                <span className="text-sm text-muted-foreground">or</span>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-              <Link
-                href="/p2p"
-                className="mt-4 flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 transition-all text-muted-foreground hover:text-foreground"
-              >
-                <Wifi className="h-5 w-5" />
-                <span className="font-medium">Share Nearby (P2P)</span>
-                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Fast</span>
-              </Link>
+              {/* Tab Content */}
+              <AnimatePresence mode="wait">
+                {activeTab === "drop" && (
+                  <motion.div
+                    key="drop"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <div className="relative">
+                      {/* Glow effect */}
+                      <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-xl opacity-50" />
+                      <div className="relative">
+                        <FileUploader />
+                      </div>
+                    </div>
+                    <p className="text-center text-sm text-muted-foreground mt-4">
+                      Upload to cloud • Get shareable link • Auto-deletes
+                    </p>
+                  </motion.div>
+                )}
+
+                {activeTab === "flash" && (
+                  <motion.div
+                    key="flash"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-4"
+                  >
+                    <div className="relative">
+                      {/* Glow effect */}
+                      <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-xl opacity-50" />
+                      <div className="relative border-2 border-dashed rounded-xl p-8 bg-card">
+                        <div className="flex flex-col items-center text-center">
+                          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
+                            <Zap className="h-8 w-8 text-primary" />
+                          </div>
+                          <h3 className="text-lg font-semibold mb-2">Flash Transfer</h3>
+                          <p className="text-muted-foreground text-sm mb-6 max-w-xs">
+                            Transfer files directly between devices. No cloud upload needed. Fast & private.
+                          </p>
+                          
+                          <div className="grid gap-3 w-full max-w-xs">
+                            <Link
+                              href="/flash?mode=send"
+                              className="flex items-center justify-between gap-3 p-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <Send className="h-5 w-5" />
+                                <div className="text-left">
+                                  <p className="font-medium">Send File</p>
+                                  <p className="text-xs opacity-80">Share with someone nearby</p>
+                                </div>
+                              </div>
+                              <ArrowRight className="h-4 w-4" />
+                            </Link>
+                            
+                            <Link
+                              href="/flash?mode=receive"
+                              className="flex items-center justify-between gap-3 p-4 rounded-xl border-2 hover:bg-muted/50 transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <Wifi className="h-5 w-5 text-muted-foreground" />
+                                <div className="text-left">
+                                  <p className="font-medium">Receive File</p>
+                                  <p className="text-xs text-muted-foreground">Enter code to receive</p>
+                                </div>
+                              </div>
+                              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Flash features */}
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                      <div className="p-2 rounded-lg bg-muted/50">
+                        <Zap className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                        <span className="text-muted-foreground">LAN Speed</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-muted/50">
+                        <Shield className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                        <span className="text-muted-foreground">Encrypted</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-muted/50">
+                        <Users className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                        <span className="text-muted-foreground">Direct P2P</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
 
             {/* Quick stats */}
@@ -190,7 +314,7 @@ export default function Home() {
               </span>
               <span className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
-                10MB max file size
+                {activeTab === "drop" ? "10MB max" : "1GB max"}
               </span>
             </motion.div>
           </motion.div>

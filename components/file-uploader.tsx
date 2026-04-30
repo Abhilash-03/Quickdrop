@@ -23,7 +23,11 @@ const ALLOWED_TYPES = [
 
 const MAX_SIZE_MB = 10 // Cloudinary free tier limit
 
-export function FileUploader() {
+interface FileUploaderProps {
+  disabled?: boolean
+}
+
+export function FileUploader({ disabled }: FileUploaderProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const {
@@ -73,22 +77,28 @@ export function FileUploader() {
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault()
+      e.stopPropagation()
+      if (disabled) return
       setIsDragging(false)
       const file = e.dataTransfer.files[0]
       if (file) handleFile(file)
     },
-    [handleFile]
+    [handleFile, disabled]
   )
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
+    if (disabled) return
     setIsDragging(true)
-  }, [])
+  }, [disabled])
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
+    if (disabled) return
     setIsDragging(false)
-  }, [])
+  }, [disabled])
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
