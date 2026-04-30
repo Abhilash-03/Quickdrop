@@ -1,16 +1,18 @@
 {
-  "name": "QuickDrop",
+  "name": "QuickDrop - Instant File Sharing",
   "short_name": "QuickDrop",
-  "description": "Fast & Secure File Sharing - Upload, share with expiring links, and auto-delete",
+  "description": "Share files instantly via P2P or cloud. Flash mode for real-time device transfers, expiring links for secure cloud sharing. No signup required.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#09090b",
   "theme_color": "#09090b",
+  "categories": ["utilities", "productivity"],
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

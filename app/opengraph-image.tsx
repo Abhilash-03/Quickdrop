@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og"
 
 export const runtime = "edge"
 
-export const alt = "QuickDrop - Fast & Secure File Sharing"
+export const alt = "QuickDrop - Instant File Sharing | P2P & Cloud Transfer"
 export const size = {
   width: 1200,
   height: 630,
@@ -81,7 +81,7 @@ export default async function Image() {
               textAlign: "center",
             }}
           >
-            Fast & Secure File Sharing
+            Instant File Sharing | P2P & Cloud
           </span>
           <span
             style={{
@@ -91,7 +91,7 @@ export default async function Image() {
               maxWidth: 800,
             }}
           >
-            Upload, share with expiring links, and auto-delete
+            Flash P2P transfers • Expiring links • No signup required
           </span>
         </div>
 
