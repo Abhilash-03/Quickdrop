@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
+import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Upload } from "lucide-react"
 import { useUploadStore } from "@/lib/upload-store"
@@ -23,6 +24,10 @@ export function GlobalDropZone() {
   const [isDragging, setIsDragging] = useState(false)
   const dragCounter = useRef(0)
   const { setFile, currentFile } = useUploadStore()
+  const pathname = usePathname()
+
+  // Disable on Flash page - it has its own drop zone
+  const isDisabled = pathname?.startsWith("/flash")
 
   const validateFile = useCallback((file: File): string | null => {
     const ext = file.name.split(".").pop()?.toLowerCase()
@@ -48,6 +53,9 @@ export function GlobalDropZone() {
       setIsDragging(false)
       dragCounter.current = 0
 
+      // Skip if disabled (e.g., on Flash page)
+      if (isDisabled) return
+
       // Don't accept if already has a file being processed
       if (currentFile && currentFile.status !== "idle") {
         toast.error("Please wait for current upload to finish")
@@ -65,19 +73,23 @@ export function GlobalDropZone() {
         toast.success(`File "${file.name}" ready to upload`)
       }
     },
-    [setFile, validateFile, currentFile]
+    [setFile, validateFile, currentFile, isDisabled]
   )
 
   const handleDragEnter = useCallback((e: DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
+    // Skip if disabled (e.g., on Flash page)
+    if (isDisabled) return
+
     dragCounter.current++
     
     // Check if it's a file being dragged
     if (e.dataTransfer?.types.includes("Files")) {
       setIsDragging(true)
     }
-  }, [])
+  }, [isDisabled])
 
   const handleDragLeave = useCallback((e: DragEvent) => {
     e.preventDefault()
@@ -109,7 +121,7 @@ export function GlobalDropZone() {
 
   return (
     <AnimatePresence>
-      {isDragging && (
+      {isDragging && !isDisabled && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
