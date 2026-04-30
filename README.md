@@ -1,6 +1,6 @@
 # QuickDrop
 
-A modern, fast file sharing application built with Next.js 16. Share files instantly with secure, auto-expiring links.
+A modern, fast file sharing application built with Next.js 16. Two powerful ways to share: **Drop** for cloud links with auto-expiring URLs, or **Flash** for instant peer-to-peer transfers.
 
 [![Live Demo](https://img.shields.io/badge/Demo-quickdrop--flash.vercel.app-blue?style=flat-square)](https://quickdrop-flash.vercel.app)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
@@ -10,36 +10,52 @@ A modern, fast file sharing application built with Next.js 16. Share files insta
 
 ## Features
 
-### Core
+### 🌐 Drop (Cloud Upload)
 - **No Signup Required** — Upload and share files anonymously, instantly
 - **Auto-Expiring Links** — Links expire after 24 hours or custom duration
 - **Download Limits** — Set max downloads (1–100), files auto-delete when limit is reached
 - **Password Protection** — Optionally protect shared files with a password
 - **File Preview** — Preview images directly on the download page
 - **QR Codes** — Generate QR codes for easy mobile sharing
+- **10MB File Limit** — Support for images, PDFs, and ZIP files
 
-### Sharing
+### ⚡ Flash (P2P Transfer)
+- **Direct P2P Transfer** — Files go directly between devices, never touch our servers
+- **1GB File Limit** — Transfer large files without cloud upload limits
+- **Any File Type** — No restrictions on file formats
+- **6-Character Codes** — Simple room codes for easy sharing
+- **Real-time Progress** — Live transfer progress with speed stats
+- **End-to-End Encrypted** — WebRTC DTLS encryption by default
+- **No Account Required** — Just select, share code, and transfer
+
+### 📤 Sharing
 - **Social Sharing** — Share via WhatsApp, Telegram, X, Facebook, Reddit, LinkedIn, Slack, Email
 - **Copy Link** — One-click copy to clipboard
+- **Share Code** — For Flash transfers, share a simple 6-character code
 
-### User Experience
+### 🎨 User Experience
 - **Optional Auth** — Sign in with Google, GitHub, or email/password for dashboard & persistent history
 - **Dashboard** — View and manage all your shared files (authenticated users)
 - **Local History** — Track uploads with localStorage (anonymous users)
 - **Profile & Stats** — View upload statistics and manage account settings
 - **Dark/Light Mode** — Automatic theme switching based on system preference
 - **Fully Responsive** — Clean, minimal UI on all devices
-- **Blur Backdrop** — Beautiful blurred background on all modals
+- **Smooth Animations** — Framer Motion powered transitions and effects
 
-### SEO & Social
+### 🔍 SEO & Social
 - **Dynamic OG Images** — Auto-generated Open Graph images for social sharing
 - **Twitter Cards** — Rich Twitter card previews
 - **PWA Ready** — Web app manifest for installable experience
 
-### Limits & Quotas
-- **10MB File Limit** — Support for images, PDFs, ZIPs, and more
-- **Daily Quotas** — Rate limiting for anonymous and authenticated users
-- **Auto-Cleanup** — Files are automatically removed after expiry
+### 📊 Limits & Quotas
+
+| Feature | Drop (Cloud) | Flash (P2P) |
+|---------|--------------|-------------|
+| **Max File Size** | 10MB | 1GB |
+| **File Types** | Images, PDFs, ZIPs | Any |
+| **Daily Limit** | 3 (anon) / 20 (auth) | Unlimited |
+| **Expiration** | Up to 30 days | 10 min room code |
+| **Storage** | Cloud (Cloudinary) | Direct transfer |
 
 ## Tech Stack
 
@@ -48,7 +64,8 @@ A modern, fast file sharing application built with Next.js 16. Share files insta
 | **Framework** | Next.js 16 (App Router, Turbopack) |
 | **Language** | TypeScript 5 |
 | **Database** | MongoDB with Prisma ORM |
-| **Storage** | Cloudinary |
+| **Storage** | Cloudinary (Drop uploads) |
+| **P2P** | PeerJS + WebRTC (Flash transfers) |
 | **Auth** | Auth.js v5 (Google, GitHub, Credentials) |
 | **Styling** | Tailwind CSS 4 + shadcn/ui |
 | **Animations** | Framer Motion |
@@ -122,7 +139,8 @@ npm start
 
 ```
 app/
-├── page.tsx              # Home page with file uploader
+├── page.tsx              # Home page with Drop/Flash tabs
+├── flash/                # Flash P2P transfer page
 ├── opengraph-image.tsx   # Dynamic OG image generation
 ├── twitter-image.tsx     # Dynamic Twitter card image
 ├── icon.tsx              # Dynamic favicon
@@ -147,8 +165,17 @@ components/
 ├── social-share.tsx      # Social sharing buttons
 ├── header.tsx            # Navigation header
 ├── footer.tsx            # Page footer
+├── flash/                # Flash P2P components
+│   ├── index.ts          # Component exports
+│   ├── flash-header.tsx  # Flash page header
+│   ├── mode-selector.tsx # Send/Receive mode selection
+│   ├── file-drop-zone.tsx # File selection for P2P
+│   ├── share-code.tsx    # Room code display
+│   ├── code-input.tsx    # Code entry for receiver
+│   └── transfer-ui.tsx   # Progress & status components
 ├── ui/                   # shadcn/ui components
 hooks/
+├── use-p2p.ts            # P2P connection & transfer logic
 ├── use-file-upload.ts    # Upload logic
 ├── use-download.ts       # Download logic
 ├── use-dashboard.ts      # Dashboard data
@@ -157,7 +184,8 @@ hooks/
 lib/
 ├── prisma.ts             # Prisma client instance
 ├── auth.ts               # Auth.js configuration
-├── upload-store.ts       # Zustand store
+├── upload-store.ts       # Zustand store (cloud uploads)
+├── p2p-store.ts          # Zustand store (P2P state)
 ├── api.ts                # API utilities
 prisma/
 └── schema.prisma         # Database schema
@@ -165,6 +193,16 @@ public/
 ├── favicon.svg           # SVG favicon
 └── site.webmanifest      # PWA manifest
 ```
+
+## How Flash P2P Works
+
+1. **Sender** selects a file and gets a 6-character room code
+2. **Receiver** enters the code to connect
+3. **WebRTC** establishes a direct peer-to-peer connection
+4. **File transfers** directly between devices (no server storage)
+5. **Room expires** after 10 minutes or when transfer completes
+
+> **Note:** Flash works best when both devices are on the same network. Cross-network transfers may be limited by NAT/firewall restrictions on some mobile carriers.
 
 ## License
 
