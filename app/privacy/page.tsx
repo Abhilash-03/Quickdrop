@@ -20,10 +20,28 @@ export default function PrivacyPage() {
               QuickDrop is designed with privacy in mind. We collect minimal information:
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-2">
-              <li><strong>Files you upload:</strong> Stored temporarily and automatically deleted after expiration</li>
+              <li><strong>Files you upload (Drop):</strong> Stored temporarily and automatically deleted after expiration</li>
               <li><strong>Account information:</strong> Email and name if you choose to sign up</li>
               <li><strong>Anonymous identifiers:</strong> Browser cookies to track upload limits for anonymous users</li>
             </ul>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-xl font-semibold">Flash P2P Transfers</h2>
+            <p className="text-muted-foreground">
+              When using Flash (P2P) transfers, your files are sent directly between devices using WebRTC technology. 
+              This means:
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2">
+              <li><strong>No server storage:</strong> Your files never pass through or are stored on our servers</li>
+              <li><strong>Direct connection:</strong> Files transfer directly from sender to receiver</li>
+              <li><strong>Encrypted transfer:</strong> WebRTC connections are encrypted by default (DTLS)</li>
+              <li><strong>Temporary codes:</strong> Room codes are only used to establish connection and expire after 10 minutes</li>
+            </ul>
+            <p className="text-muted-foreground">
+              We use a signaling server (PeerJS) only to help devices discover each other. Once connected, 
+              all data flows directly between devices without passing through any server.
+            </p>
           </section>
 
           <section className="space-y-4">
@@ -71,7 +89,9 @@ export default function PrivacyPage() {
               We use the following third-party services:
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-2">
-              <li><strong>Cloudinary:</strong> For secure file storage and delivery</li>
+              <li><strong>Cloudinary:</strong> For secure file storage and delivery (Drop uploads only)</li>
+              <li><strong>PeerJS:</strong> Signaling server to establish P2P connections (Flash transfers). Only connection metadata is exchanged - not your files.</li>
+              <li><strong>STUN servers:</strong> Public servers (Google, Cloudflare, Twilio, Mozilla) to help establish peer connections</li>
               <li><strong>Authentication providers:</strong> Google and GitHub for optional sign-in</li>
             </ul>
           </section>

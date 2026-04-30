@@ -24,9 +24,12 @@ export default function TermsPage() {
           <section className="space-y-4">
             <h2 className="text-xl font-semibold">Service Description</h2>
             <p className="text-muted-foreground">
-              QuickDrop is a temporary file sharing service. Files are automatically deleted after expiration 
-              or when download limits are reached.
+              QuickDrop offers two file sharing methods:
             </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2">
+              <li><strong>Drop (Cloud Upload):</strong> Files are uploaded to our cloud storage and automatically deleted after expiration or when download limits are reached.</li>
+              <li><strong>Flash (P2P Transfer):</strong> Files are transferred directly between devices using peer-to-peer technology. Files never touch our servers - they go directly from sender to receiver.</li>
+            </ul>
           </section>
 
           <section className="space-y-4">
@@ -45,11 +48,21 @@ export default function TermsPage() {
 
           <section className="space-y-4">
             <h2 className="text-xl font-semibold">Upload Limits</h2>
+            <h3 className="text-lg font-medium mt-4">Drop (Cloud Upload)</h3>
             <ul className="list-disc list-inside text-muted-foreground space-y-2">
               <li>Anonymous users: 3 uploads per day</li>
               <li>Registered users: 20 uploads per day</li>
               <li>Maximum file size: 10MB</li>
+              <li>Supported formats: Images (JPG, PNG, GIF, WebP), PDFs, and ZIP files</li>
               <li>Maximum expiration: 30 days</li>
+            </ul>
+            <h3 className="text-lg font-medium mt-4">Flash (P2P Transfer)</h3>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2">
+              <li>Maximum file size: 1GB</li>
+              <li>Any file type supported</li>
+              <li>Room codes expire after 10 minutes</li>
+              <li>Both devices must be online during transfer</li>
+              <li>No daily limits - transfer as many files as you want</li>
             </ul>
           </section>
 
@@ -58,6 +71,11 @@ export default function TermsPage() {
             <p className="text-muted-foreground">
               QuickDrop is provided &quot;as is&quot; without warranties. We don&apos;t guarantee file availability, 
               uptime, or that files won&apos;t be deleted early due to technical issues.
+            </p>
+            <p className="text-muted-foreground">
+              For Flash P2P transfers, connection success depends on network conditions and device compatibility. 
+              We cannot guarantee successful connections across all network configurations (e.g., strict firewalls, 
+              carrier-grade NAT, or certain mobile networks).
             </p>
           </section>
 
