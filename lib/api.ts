@@ -99,10 +99,17 @@ export const dashboardApi = {
         downloadLimit: number
         expiresAt: string
         createdAt: string
+        hasPassword: boolean
       }>
     }>("/dashboard"),
 
   deleteShare: (id: string) => api.delete(`/share/${id}`),
+
+  setPassword: (id: string, password: string) =>
+    api.patch<{ success: boolean; hasPassword: boolean }>(`/share/${id}/password`, { password }),
+
+  removePassword: (id: string) =>
+    api.delete<{ success: boolean; hasPassword: boolean }>(`/share/${id}/password`),
 }
 
 // Cloudinary upload with progress

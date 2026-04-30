@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { SocialShare } from "@/components/social-share"
+import { PasswordProtectDialog } from "@/components/password-protect-dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -154,7 +155,7 @@ function FileRow({
           )}
         </div>
         
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center justify-end gap-1 w-36 opacity-0 group-hover:opacity-100 transition-opacity">
           {isActive && (
             <>
               <Button
@@ -174,6 +175,11 @@ function FileRow({
                 url={shareUrl}
                 title={`Download ${share.filename} via QuickDrop`}
                 filename={share.filename}
+              />
+              
+              <PasswordProtectDialog
+                shareId={share.id}
+                hasPassword={share.hasPassword}
               />
             </>
           )}
@@ -226,7 +232,7 @@ function FileRow({
           </div>
         </div>
         
-        <div className="flex items-center">
+        <div className="flex items-center justify-end w-28 shrink-0">
           {isActive && (
             <>
               <Button
@@ -246,6 +252,11 @@ function FileRow({
                 url={shareUrl}
                 title={`Download ${share.filename} via QuickDrop`}
                 filename={share.filename}
+              />
+              
+              <PasswordProtectDialog
+                shareId={share.id}
+                hasPassword={share.hasPassword}
               />
             </>
           )}
@@ -398,7 +409,7 @@ export default function DashboardPage() {
               <div className="hidden lg:block w-24">Downloads</div>
               <div className="w-20 text-right">Created</div>
               <div className="w-16">Status</div>
-              <div className="w-[104px]" />
+              <div className="w-36" />
             </div>
 
             {/* File list */}

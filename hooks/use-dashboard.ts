@@ -15,6 +15,7 @@ export interface Share {
   downloadLimit: number
   expiresAt: string
   createdAt: string
+  hasPassword: boolean
 }
 
 // Fetch all shares
@@ -58,6 +59,69 @@ export function useDeleteShare() {
     },
     onSuccess: () => {
       toast.success("File deleted")
+    },
+  })
+}
+
+// Set password for a share
+export function useSetPassword() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, password }: { id: string; password: string }) =>
+      dashboardApi.setPassword(id, password),
+    onMutate: async ({ id }) => {
+      await queryClient.cancelQueries({ queryKey: ["dashboard", "shares"] })
+      const previous = queryClient.getQueryData<Share[]>(["dashboard", "shares"])
+
+      // Optimistic update
+      queryClient.setQueryData<Share[]>(["dashboard", "shares"], (old) =>
+        old?.map((share) =>
+          share.id === id ? { ...share, hasPassword: true } : share
+        )
+      )
+
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["dashboard", "shares"], context.previous)
+      }
+      toast.error("Failed to set password")
+    },
+    onSuccess: () => {
+      toast.success("Password protection enabled")
+    },
+  })
+}
+
+// Remove password from a share
+export function useRemovePassword() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => dashboardApi.removePassword(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["dashboard", "shares"] })
+      const previous = queryClient.getQueryData<Share[]>(["dashboard", "shares"])
+
+      // Optimistic update
+      queryClient.setQueryData<Share[]>(["dashboard", "shares"], (old) =>
+        old?.map((share) =>
+          share.id === id ? { ...share, hasPassword: false } : share
+        )
+      )
+
+      return { previous }
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["dashboard", "shares"], context.previous)
+      }
+      toast.error("Failed to remove password")
+    },
+    onSuccess: () => {
+      toast.success("Password protection disabled")
     },
   })
 }

@@ -10,5 +10,7 @@ export function useLinkInfo(code: string) {
     },
     retry: false,
     enabled: !!code,
+    staleTime: 0, // Always refetch to get latest password status
+    refetchOnWindowFocus: true,
   })
 }

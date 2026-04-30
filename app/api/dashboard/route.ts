@@ -26,6 +26,7 @@ export async function GET() {
     downloadLimit: share.downloadLimit,
     expiresAt: share.expiresAt.toISOString(),
     createdAt: share.createdAt.toISOString(),
+    hasPassword: !!share.passwordHash,
   }))
 
   return NextResponse.json({ shares: formatted })
