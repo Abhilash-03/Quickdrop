@@ -173,6 +173,7 @@ function FileRow({
               <SocialShare 
                 url={shareUrl}
                 title={`Download ${share.filename} via QuickDrop`}
+                filename={share.filename}
               />
             </>
           )}
@@ -244,6 +245,7 @@ function FileRow({
               <SocialShare 
                 url={shareUrl}
                 title={`Download ${share.filename} via QuickDrop`}
+                filename={share.filename}
               />
             </>
           )}

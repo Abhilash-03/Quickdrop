@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Share2, Copy, Check, ExternalLink } from "lucide-react"
+import { Share2, Copy, Check, ExternalLink, QrCode } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   WhatsappShareButton,
@@ -32,6 +32,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { QRCodeDisplay } from "@/components/qr-code-popover"
 import { toast } from "sonner"
 
 // Custom icons for platforms not in react-share
@@ -48,6 +49,7 @@ const SlackIcon = ({ size = 36 }: { size?: number }) => (
 interface SocialShareProps {
   url: string
   title?: string
+  filename?: string
   variant?: "ghost" | "outline" | "default"
   size?: "icon" | "sm" | "default"
   className?: string
@@ -71,12 +73,14 @@ const customShareButtons = [
 export function SocialShare({ 
   url, 
   title = "Download file via QuickDrop",
+  filename = "share",
   variant = "ghost",
   size = "icon",
   className,
 }: SocialShareProps) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showQR, setShowQR] = useState(false)
 
   const handleCopy = async () => {
     try {
@@ -173,15 +177,38 @@ export function SocialShare({
                   <p className="text-xs text-muted-foreground mb-1">Share Link</p>
                   <p className="text-sm font-mono font-medium truncate">{shortCode}</p>
                 </div>
+                <Button 
+                  variant={showQR ? "default" : "ghost"}
+                  size="icon"
+                  onClick={() => setShowQR(!showQR)}
+                  className="h-9 w-9 shrink-0"
+                >
+                  <QrCode className="h-4 w-4" />
+                </Button>
                 <a 
                   href={url} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                  className="p-2 rounded-lg hover:bg-muted transition-colors shrink-0"
                 >
                   <ExternalLink className="h-4 w-4 text-muted-foreground" />
                 </a>
               </div>
+
+              {/* QR Code section */}
+              <AnimatePresence>
+                {showQR && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <QRCodeDisplay url={url} filename={filename} size={150} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
               
               <motion.button
                 whileHover={{ scale: 1.02 }}
