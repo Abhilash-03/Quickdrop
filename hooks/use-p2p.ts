@@ -20,6 +20,32 @@ const MAX_FILE_SIZE = 1 * 1024 * 1024 * 1024 // 1GB
 const CONNECTION_TIMEOUT = 5 * 60 * 1000 // 5 minutes
 const ROOM_EXPIRATION = 10 * 60 * 1000 // 10 minutes
 
+// ICE servers configuration for better cross-platform compatibility (especially iOS Safari)
+const ICE_SERVERS = [
+  // Google STUN servers
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun2.l.google.com:19302" },
+  { urls: "stun:stun3.l.google.com:19302" },
+  { urls: "stun:stun4.l.google.com:19302" },
+  // Cloudflare STUN
+  { urls: "stun:stun.cloudflare.com:3478" },
+  // Twilio STUN (free)
+  { urls: "stun:global.stun.twilio.com:3478" },
+  // Additional public STUN servers
+  { urls: "stun:stun.services.mozilla.com:3478" },
+]
+
+// Peer configuration optimized for iOS Safari
+const PEER_CONFIG = {
+  debug: 0,
+  config: {
+    iceServers: ICE_SERVERS,
+    iceCandidatePoolSize: 10, // Pre-fetch candidates for faster connection
+    sdpSemantics: "unified-plan" as const, // Required for Safari
+  },
+}
+
 interface FileMetadata {
   type: "metadata"
   name: string
@@ -118,16 +144,7 @@ export function useP2P() {
     const code = generateRoomCode()
     
     // Create peer with room code as ID
-    const peer = new Peer(`quickdrop-${code}`, {
-      debug: 0,
-      config: {
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-          { urls: "stun:stun.cloudflare.com:3478" },
-        ],
-      },
-    })
+    const peer = new Peer(`quickdrop-${code}`, PEER_CONFIG)
 
     peerRef.current = peer
 
@@ -263,25 +280,17 @@ export function useP2P() {
     setStatus("connecting")
     setRoomCode(code.toUpperCase())
     
-    const peer = new Peer({
-      debug: 0,
-      config: {
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-          { urls: "stun:stun.cloudflare.com:3478" },
-        ],
-      },
-    })
+    const peer = new Peer(PEER_CONFIG)
 
     peerRef.current = peer
 
     peer.on("open", (id) => {
       setPeerId(id)
       
-      // Connect to sender
+      // Connect to sender with Safari-compatible options
       const conn = peer.connect(`quickdrop-${code.toUpperCase()}`, {
         reliable: true,
+        serialization: "binary", // Better for file transfers on Safari
       })
       
       connectionRef.current = conn
