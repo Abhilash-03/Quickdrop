@@ -4,8 +4,9 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { FileUploader } from "@/components/file-uploader"
 import { ShareLinkDialog } from "@/components/share-link-dialog"
-import { Shield, Clock, Zap, Upload, Link2, Trash2 } from "lucide-react"
+import { Shield, Clock, Zap, Upload, Link2, Trash2, Wifi } from "lucide-react"
 import { motion } from "framer-motion"
+import Link from "next/link"
 
 // Animation variants
 const fadeInUp = {
@@ -161,6 +162,21 @@ export default function Home() {
                   <FileUploader />
                 </div>
               </div>
+
+              {/* P2P Option */}
+              <div className="mt-6 flex items-center gap-4">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-sm text-muted-foreground">or</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+              <Link
+                href="/p2p"
+                className="mt-4 flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5 transition-all text-muted-foreground hover:text-foreground"
+              >
+                <Wifi className="h-5 w-5" />
+                <span className="font-medium">Share Nearby (P2P)</span>
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Fast</span>
+              </Link>
             </motion.div>
 
             {/* Quick stats */}
