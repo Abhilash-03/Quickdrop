@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Radio, Wifi } from "lucide-react"
+import { Radio, Wifi, Loader2 } from "lucide-react"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { useP2P } from "@/hooks/use-p2p"
@@ -70,7 +70,20 @@ function GradientBackground() {
   )
 }
 
-export default function FlashTransferPage() {
+// Loading fallback
+function LoadingFallback() {
+  return (
+    <div className="flex min-h-screen flex-col relative">
+      <GradientBackground />
+      <Header />
+      <main className="flex-1 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </main>
+    </div>
+  )
+}
+
+function FlashTransferContent() {
   const searchParams = useSearchParams()
   const [mode, setMode] = useState<Mode>("select")
   const [joinCode, setJoinCode] = useState("")
@@ -209,5 +222,13 @@ export default function FlashTransferPage() {
         </AnimatePresence>
       </main>
     </div>
+  )
+}
+
+export default function FlashTransferPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <FlashTransferContent />
+    </Suspense>
   )
 }
