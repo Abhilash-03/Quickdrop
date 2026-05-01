@@ -66,6 +66,19 @@ interface TransferComplete {
 
 type P2PMessage = FileMetadata | FileChunk | TransferComplete
 
+// Wake Lock API type declarations
+interface WakeLockSentinel {
+  released: boolean
+  type: "screen"
+  release(): Promise<void>
+  addEventListener(type: "release", listener: () => void): void
+  removeEventListener(type: "release", listener: () => void): void
+}
+
+interface WakeLockAPI {
+  request(type: "screen"): Promise<WakeLockSentinel>
+}
+
 export function useP2P() {
   const peerRef = useRef<Peer | null>(null)
   const connectionRef = useRef<DataConnection | null>(null)
@@ -74,6 +87,8 @@ export function useP2P() {
   const startTimeRef = useRef<number>(0)
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const roomExpirationRef = useRef<NodeJS.Timeout | null>(null)
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null)
+  const keepAliveIntervalRef = useRef<NodeJS.Timeout | null>(null)
   
   const {
     status,
@@ -106,9 +121,70 @@ export function useP2P() {
     }
   }, [])
 
+  // Request wake lock to prevent screen sleep and tab throttling
+  const requestWakeLock = useCallback(async () => {
+    try {
+      // Check if Wake Lock API is available
+      if ("wakeLock" in navigator) {
+        const wakeLock = navigator.wakeLock as WakeLockAPI
+        wakeLockRef.current = await wakeLock.request("screen")
+        console.log("[P2P] Wake lock acquired")
+        
+        // Re-acquire if released (e.g., tab goes to background then comes back)
+        wakeLockRef.current.addEventListener("release", () => {
+          console.log("[P2P] Wake lock released")
+        })
+      }
+    } catch (err) {
+      console.log("[P2P] Wake lock not available:", err)
+    }
+  }, [])
+
+  // Release wake lock
+  const releaseWakeLock = useCallback(async () => {
+    if (wakeLockRef.current) {
+      try {
+        await wakeLockRef.current.release()
+        wakeLockRef.current = null
+        console.log("[P2P] Wake lock released manually")
+      } catch (err) {
+        console.log("[P2P] Error releasing wake lock:", err)
+      }
+    }
+  }, [])
+
+  // Start keep-alive interval to prevent connection timeout in background
+  const startKeepAlive = useCallback(() => {
+    // Clear any existing interval
+    if (keepAliveIntervalRef.current) {
+      clearInterval(keepAliveIntervalRef.current)
+    }
+    
+    // Send periodic pings to keep connection alive
+    keepAliveIntervalRef.current = setInterval(() => {
+      if (connectionRef.current && connectionRef.current.open) {
+        try {
+          connectionRef.current.send({ type: "ping" })
+        } catch {
+          // Ignore ping errors
+        }
+      }
+    }, 5000) // Every 5 seconds
+  }, [])
+
+  // Stop keep-alive interval
+  const stopKeepAlive = useCallback(() => {
+    if (keepAliveIntervalRef.current) {
+      clearInterval(keepAliveIntervalRef.current)
+      keepAliveIntervalRef.current = null
+    }
+  }, [])
+
   // Cleanup function
   const cleanup = useCallback(() => {
     clearTimeouts()
+    stopKeepAlive()
+    releaseWakeLock()
     if (connectionRef.current) {
       connectionRef.current.close()
       connectionRef.current = null
@@ -119,7 +195,7 @@ export function useP2P() {
     }
     fileRef.current = null
     chunksRef.current = []
-  }, [clearTimeouts])
+  }, [clearTimeouts, stopKeepAlive, releaseWakeLock])
 
   // Initialize as sender
   const initSender = useCallback(async (selectedFile: File) => {
@@ -131,6 +207,9 @@ export function useP2P() {
 
     cleanup()
     reset()
+    
+    // Request wake lock to prevent background throttling
+    await requestWakeLock()
     
     setRole("sender")
     setStatus("connecting")
@@ -180,6 +259,7 @@ export function useP2P() {
       
       connectionRef.current = conn
       setStatus("connected")
+      startKeepAlive() // Start keep-alive pings
 
       conn.on("open", () => {
         // Send file metadata first
@@ -194,6 +274,8 @@ export function useP2P() {
 
       conn.on("data", (data) => {
         const message = data as { type: string }
+        // Ignore ping messages
+        if (message.type === "ping") return
         if (message.type === "ready") {
           // Receiver is ready, start sending chunks
           sendFileChunks(conn, selectedFile)
@@ -224,7 +306,7 @@ export function useP2P() {
         setError("Disconnected from server")
       }
     })
-  }, [cleanup, reset, setRole, setStatus, setFile, setPeerId, setRoomCode, setError, status])
+  }, [cleanup, reset, requestWakeLock, startKeepAlive, setRole, setStatus, setFile, setPeerId, setRoomCode, setError, status])
 
   // Send file in chunks
   const sendFileChunks = useCallback(async (conn: DataConnection, file: File) => {
@@ -276,6 +358,9 @@ export function useP2P() {
     cleanup()
     reset()
     
+    // Request wake lock to prevent background throttling
+    await requestWakeLock()
+    
     setRole("receiver")
     setStatus("connecting")
     setRoomCode(code.toUpperCase())
@@ -298,10 +383,13 @@ export function useP2P() {
 
       conn.on("open", () => {
         setStatus("connected")
+        startKeepAlive() // Start keep-alive pings
       })
 
       conn.on("data", (data) => {
         const message = data as P2PMessage
+        // Ignore ping messages
+        if ((message as { type: string }).type === "ping") return
         handleReceivedMessage(message, conn)
       })
 
@@ -323,7 +411,7 @@ export function useP2P() {
       }
       setError(`Connection failed: ${err.message}`)
     })
-  }, [cleanup, reset, setRole, setStatus, setRoomCode, setPeerId, setError, status])
+  }, [cleanup, reset, requestWakeLock, startKeepAlive, setRole, setStatus, setRoomCode, setPeerId, setError, status])
 
   // Handle received messages
   const handleReceivedMessage = useCallback((message: P2PMessage, conn: DataConnection) => {
@@ -393,6 +481,30 @@ export function useP2P() {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }, [])
+
+  // Re-acquire wake lock when tab becomes visible again during active transfer
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === "visible") {
+        // Re-acquire wake lock if we're in an active transfer state
+        const currentStatus = useP2PStore.getState().status
+        if (
+          currentStatus === "connecting" ||
+          currentStatus === "waiting" ||
+          currentStatus === "connected" ||
+          currentStatus === "transferring"
+        ) {
+          await requestWakeLock()
+          console.log("[P2P] Tab visible again, re-acquired wake lock")
+        }
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }
+  }, [requestWakeLock])
 
   // Cleanup on unmount
   useEffect(() => {
