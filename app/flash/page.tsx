@@ -204,7 +204,7 @@ function FlashTransferContent() {
                 rightAction={showCancel && <Button variant="ghost" size="sm" onClick={handleBack}>Cancel</Button>}
               />
               <div className="flex-1 flex flex-col items-center justify-center p-6">
-                {status === "idle" && <CodeInput value={joinCode} onChange={setJoinCode} onSubmit={() => initReceiver(joinCode.trim())} />}
+                {status === "idle" && <CodeInput value={joinCode} onChange={setJoinCode} onSubmit={(code) => initReceiver((code || joinCode).trim())} />}
                 {status === "connecting" && <ConnectingSpinner icon={Wifi} title="Connecting..." subtitle={`Code: ${joinCode}`} />}
                 {(status === "connected" || status === "transferring") && (
                   <div className="w-full max-w-sm space-y-6">

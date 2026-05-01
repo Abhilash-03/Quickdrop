@@ -10,7 +10,7 @@ import { QRScanner } from "./qr-scanner"
 interface CodeInputProps {
   value: string
   onChange: (code: string) => void
-  onSubmit: () => void
+  onSubmit: (code?: string) => void
   autoFocus?: boolean
 }
 
@@ -39,7 +39,7 @@ export function CodeInput({ value, onChange, onSubmit, autoFocus = true }: CodeI
       inputsRef.current[index - 1]?.focus()
     }
     if (e.key === "Enter" && value.length === 6) {
-      onSubmit()
+      onSubmit() // Uses state value for manual entry
     }
   }, [value, onSubmit])
 
@@ -119,12 +119,13 @@ export function CodeInput({ value, onChange, onSubmit, autoFocus = true }: CodeI
         {showScanner && (
           <QRScanner
             onScan={(code) => {
-              onChange(code)
+              console.log("QR Scanner returned code:", code)
+              // Close scanner first
               setShowScanner(false)
-              // Auto-submit after scanning
-              setTimeout(() => {
-                onSubmit()
-              }, 300)
+              // Set the code value for display
+              onChange(code)
+              // Pass code directly to avoid stale closure issue
+              onSubmit(code)
             }}
             onClose={() => setShowScanner(false)}
           />
