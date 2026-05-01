@@ -251,17 +251,32 @@ export function useP2P() {
     })
 
     peer.on("connection", (conn) => {
-      // Clear connection timeout since someone connected
+      // Clear connection timeout since someone is trying to connect
       if (connectionTimeoutRef.current) {
         clearTimeout(connectionTimeoutRef.current)
         connectionTimeoutRef.current = null
       }
       
       connectionRef.current = conn
-      setStatus("connected")
-      startKeepAlive() // Start keep-alive pings
+      // Don't set "connected" yet - wait for the data channel to open
+      
+      // Set timeout for data channel to open (30 seconds)
+      const dataChannelTimeout = setTimeout(() => {
+        const currentStatus = useP2PStore.getState().status
+        if (currentStatus === "waiting") {
+          setError("Connection failed. Receiver could not establish P2P connection.")
+          setStatus("error")
+        }
+      }, 30000)
 
       conn.on("open", () => {
+        // Clear data channel timeout
+        clearTimeout(dataChannelTimeout)
+        
+        // Connection is now actually established
+        setStatus("connected")
+        startKeepAlive() // Start keep-alive pings
+        
         // Send file metadata first
         const metadata: FileMetadata = {
           type: "metadata",
@@ -283,11 +298,18 @@ export function useP2P() {
       })
 
       conn.on("close", () => {
-        setStatus("idle")
+        clearTimeout(dataChannelTimeout)
+        const currentStatus = useP2PStore.getState().status
+        if (currentStatus !== "completed") {
+          setError("Receiver disconnected")
+          setStatus("error")
+        }
       })
 
       conn.on("error", (err) => {
+        clearTimeout(dataChannelTimeout)
         setError(`Connection error: ${err.message}`)
+        setStatus("error")
       })
     })
 
@@ -380,8 +402,22 @@ export function useP2P() {
       
       connectionRef.current = conn
       chunksRef.current = []
+      
+      // Set connection timeout - if data channel doesn't open in 30 seconds, fail
+      connectionTimeoutRef.current = setTimeout(() => {
+        const currentStatus = useP2PStore.getState().status
+        if (currentStatus === "connecting") {
+          setError("Connection timeout. Could not establish P2P connection.")
+          cleanup()
+        }
+      }, 30000)
 
       conn.on("open", () => {
+        // Clear connection timeout
+        if (connectionTimeoutRef.current) {
+          clearTimeout(connectionTimeoutRef.current)
+          connectionTimeoutRef.current = null
+        }
         setStatus("connected")
         startKeepAlive() // Start keep-alive pings
       })
@@ -394,24 +430,29 @@ export function useP2P() {
       })
 
       conn.on("close", () => {
-        if (status !== "completed") {
-          setStatus("idle")
+        const currentStatus = useP2PStore.getState().status
+        if (currentStatus !== "completed") {
+          setError("Connection closed by sender")
+          setStatus("error")
         }
       })
 
       conn.on("error", (err) => {
         setError(`Connection error: ${err.message}`)
+        setStatus("error")
       })
     })
 
     peer.on("error", (err) => {
       if (err.type === "peer-unavailable") {
         setError("Room not found. Check the code and try again.")
+        setStatus("error")
         return
       }
       setError(`Connection failed: ${err.message}`)
+      setStatus("error")
     })
-  }, [cleanup, reset, requestWakeLock, startKeepAlive, setRole, setStatus, setRoomCode, setPeerId, setError, status])
+  }, [cleanup, reset, requestWakeLock, startKeepAlive, setRole, setStatus, setRoomCode, setPeerId, setError])
 
   // Handle received messages
   const handleReceivedMessage = useCallback((message: P2PMessage, conn: DataConnection) => {
