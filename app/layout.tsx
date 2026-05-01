@@ -7,6 +7,7 @@ import { QueryProvider } from "@/components/query-provider";
 import { AuthModal } from "@/components/auth-modal";
 import { Toaster } from "@/components/ui/sonner";
 import { GlobalDropZone } from "@/components/global-drop-zone";
+import { GlobalQRScanner } from "@/components/global-qr-scanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -95,6 +96,7 @@ export default function RootLayout({
             <QueryProvider>
               {children}
               <GlobalDropZone />
+              <GlobalQRScanner />
             </QueryProvider>
             <AuthModal />
           </AuthProvider>

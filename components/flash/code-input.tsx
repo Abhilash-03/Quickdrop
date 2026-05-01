@@ -106,7 +106,7 @@ export function CodeInput({ value, onChange, onSubmit, autoFocus = true }: CodeI
         <Button 
           className="flex-1 h-12 text-base font-semibold"
           size="lg"
-          onClick={onSubmit}
+          onClick={() => onSubmit()}
           disabled={value.length !== 6}
         >
           <Wifi className="h-5 w-5 mr-2" />

@@ -3,10 +3,11 @@
 import { useMemo } from "react"
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
-import { Upload, LogOut, LayoutDashboard, User, History } from "lucide-react"
+import { Upload, LogOut, LayoutDashboard, User, History, ScanLine } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuthModal } from "@/lib/auth-modal-store"
 import { useUploadStore } from "@/lib/upload-store"
+import { useQRScannerStore } from "@/lib/qr-scanner-store"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -27,6 +28,7 @@ export function Header() {
   const { data: session, status } = useSession()
   const { openLogin } = useAuthModal()
   const shareHistory = useUploadStore((state) => state.shareHistory)
+  const openScanner = useQRScannerStore((state) => state.open)
 
   // Count only active (non-expired) shares
   const activeShareCount = useMemo(() => {
@@ -49,6 +51,15 @@ export function Header() {
 
         <nav className="flex items-center gap-1 sm:gap-2">
           <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" onClick={openScanner}>
+                  <ScanLine className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Scan QR Code</TooltipContent>
+            </Tooltip>
+            
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" asChild className="relative">
