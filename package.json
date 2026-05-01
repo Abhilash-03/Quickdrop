@@ -24,6 +24,7 @@
     "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
+    "html5-qrcode": "^2.3.8",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.542.0",
     "nanoid": "^5.1.6",

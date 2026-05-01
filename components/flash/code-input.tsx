@@ -1,10 +1,11 @@
 "use client"
 
-import { useRef, useCallback, useEffect } from "react"
-import { motion } from "framer-motion"
-import { Download, Wifi } from "lucide-react"
+import { useRef, useCallback, useEffect, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Download, Wifi, ScanLine } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { QRScanner } from "./qr-scanner"
 
 interface CodeInputProps {
   value: string
@@ -15,7 +16,7 @@ interface CodeInputProps {
 
 export function CodeInput({ value, onChange, onSubmit, autoFocus = true }: CodeInputProps) {
   const inputsRef = useRef<(HTMLInputElement | null)[]>([])
-
+  const [showScanner, setShowScanner] = useState(false)
   useEffect(() => {
     if (autoFocus) {
       setTimeout(() => inputsRef.current[0]?.focus(), 100)
@@ -94,15 +95,41 @@ export function CodeInput({ value, onChange, onSubmit, autoFocus = true }: CodeI
         ))}
       </div>
 
-      <Button 
-        className="w-full h-12 text-base font-semibold"
-        size="lg"
-        onClick={onSubmit}
-        disabled={value.length !== 6}
-      >
-        <Wifi className="h-5 w-5 mr-2" />
-        Connect
-      </Button>
+      <div className="flex gap-3">
+        <Button 
+          variant="outline"
+          className="h-12 px-4"
+          onClick={() => setShowScanner(true)}
+        >
+          <ScanLine className="h-5 w-5" />
+        </Button>
+        <Button 
+          className="flex-1 h-12 text-base font-semibold"
+          size="lg"
+          onClick={onSubmit}
+          disabled={value.length !== 6}
+        >
+          <Wifi className="h-5 w-5 mr-2" />
+          Connect
+        </Button>
+      </div>
+
+      {/* QR Scanner Modal */}
+      <AnimatePresence>
+        {showScanner && (
+          <QRScanner
+            onScan={(code) => {
+              onChange(code)
+              setShowScanner(false)
+              // Auto-submit after scanning
+              setTimeout(() => {
+                onSubmit()
+              }, 300)
+            }}
+            onClose={() => setShowScanner(false)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
