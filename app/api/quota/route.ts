@@ -36,7 +36,17 @@ export async function GET(req: NextRequest) {
     // Anonymous quota - Use IP address for consistency with share API
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
                req.headers.get("x-real-ip") || 
-               "unknown";
+               "";
+
+    // If IP can't be determined, return full quota (actual enforcement happens at upload time)
+    if (!ip || ip === "unknown" || ip === "::1" || ip === "127.0.0.1") {
+      return NextResponse.json({
+        used: 0,
+        limit: DAILY_LIMITS.anonymous,
+        remaining: DAILY_LIMITS.anonymous,
+        isAnonymous: true,
+      });
+    }
 
     const quota = await prisma.anonQuota.findUnique({
       where: { ip },
