@@ -127,14 +127,31 @@ export function GlobalDropZone() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center pointer-events-none"
+          className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center"
+          onDrop={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            handleDrop(e.nativeEvent)
+          }}
+          onDragOver={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault()
+            // Only close if leaving the overlay entirely
+            if (e.currentTarget === e.target) {
+              setIsDragging(false)
+              dragCounter.current = 0
+            }
+          }}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="border-2 border-dashed border-primary rounded-3xl p-16 bg-primary/5 text-center"
+            className="border-2 border-dashed border-primary rounded-3xl p-16 bg-primary/5 text-center pointer-events-none"
           >
             <motion.div
               animate={{ y: [0, -8, 0] }}
