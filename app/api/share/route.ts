@@ -48,25 +48,17 @@ export async function POST(req: NextRequest) {
         
         const data = parseResult.data;
         const today = getTodayDate();
-        
-        // Cookie for anonymous users
-        let anonId: string | undefined;
-        let shouldSetCookie = false;
 
         // Quota check
         if(!session?.user) {
-            // Anonymous quota check
-            const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "0.0.0.0";
-            anonId = req.cookies.get("anonId")?.value;
+            // Anonymous quota check - Use IP address to track across browsers
+            const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                       req.headers.get("x-real-ip") || 
+                       "unknown";
             
-            if (!anonId) {
-                anonId = crypto.randomUUID();
-                shouldSetCookie = true;
-            }
-            
-            // Check existing quota first
+            // Check existing quota by IP (not cookie - prevents browser switching bypass)
             const existingQuota = await prisma.anonQuota.findUnique({
-                where: { anonId }
+                where: { ip }
             });
             
             // Get today's date for daily reset check
@@ -81,13 +73,13 @@ export async function POST(req: NextRequest) {
                 );
             }
             
-            // Update or create quota (reset if new day)
+            // Update or create quota by IP (reset if new day)
             await prisma.anonQuota.upsert({
-                where: { anonId },
+                where: { ip },
                 update: isNewDay 
-                    ? { uploads: 1, ip } // Reset on new day
-                    : { uploads: { increment: 1 }, ip },
-                create: { anonId, ip, uploads: 1 },
+                    ? { uploads: 1 } // Reset on new day
+                    : { uploads: { increment: 1 } },
+                create: { ip, uploads: 1 },
             });
         } else {
             // Authenticated user quota check
@@ -154,18 +146,7 @@ export async function POST(req: NextRequest) {
             }
         })
 
-        const response = NextResponse.json({ url: `${baseUrl}/d/${share.code}`});
-        
-        // Set cookie for anonymous users
-        if (shouldSetCookie && anonId) {
-            response.cookies.set("anonId", anonId, {
-                httpOnly: true,
-                sameSite: "lax",
-                maxAge: 60 * 60 * 24 * 365, // 1 year
-            });
-        }
-        
-        return response;
+        return NextResponse.json({ url: `${baseUrl}/d/${share.code}`});
     } catch (error) {
         console.error("Share API error:", error);
         return NextResponse.json(

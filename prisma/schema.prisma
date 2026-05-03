@@ -55,8 +55,8 @@ model ShareLink {
 
 model AnonQuota {
     id        String   @id @default(auto()) @map("_id") @db.ObjectId
-    anonId    String   @unique
-    ip        String
+    anonId    String?  // Legacy, kept for backward compatibility
+    ip        String   @unique // Use IP as primary identifier
     uploads   Int      @default(0)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

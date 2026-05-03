@@ -33,21 +33,13 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Anonymous quota
-    const anonId = req.cookies.get("anonId")?.value;
-
-    if (!anonId) {
-      // No uploads yet
-      return NextResponse.json({
-        used: 0,
-        limit: DAILY_LIMITS.anonymous,
-        remaining: DAILY_LIMITS.anonymous,
-        isAnonymous: true,
-      });
-    }
+    // Anonymous quota - Use IP address for consistency with share API
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+               req.headers.get("x-real-ip") || 
+               "unknown";
 
     const quota = await prisma.anonQuota.findUnique({
-      where: { anonId },
+      where: { ip },
     });
 
     if (!quota) {
