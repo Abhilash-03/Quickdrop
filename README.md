@@ -24,9 +24,18 @@ A modern, fast file sharing application built with Next.js 16. Two powerful ways
 - **1GB File Limit** — Transfer large files without cloud upload limits
 - **Any File Type** — No restrictions on file formats
 - **6-Character Codes** — Simple room codes for easy sharing
+- **QR Code Scanning** — Scan sender's QR code to connect instantly
 - **Real-time Progress** — Live transfer progress with speed stats
+- **Background Transfer Support** — Keeps transfers alive even when screen dims
 - **End-to-End Encrypted** — WebRTC DTLS encryption by default
+- **Cross-Platform** — Works on iOS Safari, Android Chrome, and desktop browsers
 - **No Account Required** — Just select, share code, and transfer
+
+### 📱 Global QR Scanner
+- **Scan Any QR** — Header button opens camera to scan any QuickDrop QR code
+- **Smart Detection** — Automatically detects Flash codes vs Drop download links
+- **Auto-Route** — Scanned codes route to the correct page automatically
+- **External Links** — Can scan and open external URLs too
 
 ### 📤 Sharing
 - **Social Sharing** — Share via WhatsApp, Telegram, X, Facebook, Reddit, LinkedIn, Slack, Email
@@ -66,6 +75,7 @@ A modern, fast file sharing application built with Next.js 16. Two powerful ways
 | **Database** | MongoDB with Prisma ORM |
 | **Storage** | Cloudinary (Drop uploads) |
 | **P2P** | PeerJS + WebRTC (Flash transfers) |
+| **QR Scanning** | html5-qrcode |
 | **Auth** | Auth.js v5 (Google, GitHub, Credentials) |
 | **Styling** | Tailwind CSS 4 + shadcn/ui |
 | **Animations** | Framer Motion |
@@ -135,74 +145,16 @@ npm run build
 npm start
 ```
 
-## Project Structure
-
-```
-app/
-├── page.tsx              # Home page with Drop/Flash tabs
-├── flash/                # Flash P2P transfer page
-├── opengraph-image.tsx   # Dynamic OG image generation
-├── twitter-image.tsx     # Dynamic Twitter card image
-├── icon.tsx              # Dynamic favicon
-├── apple-icon.tsx        # Apple touch icon
-├── dashboard/            # User's shared files (auth required)
-├── history/              # Local share history
-├── profile/              # User profile & settings
-├── d/[code]/             # Download page
-├── download/[code]/      # Direct file download endpoint
-├── auth/                 # Auth-related pages
-│   └── popup-callback/   # OAuth popup callback
-├── api/
-│   ├── auth/             # Auth.js + custom auth endpoints
-│   ├── upload/sign/      # Cloudinary signature endpoint
-│   ├── share/            # Create & manage share links
-│   ├── links/            # Link status management
-│   ├── quota/            # User quota endpoint
-│   └── dashboard/        # Dashboard data endpoint
-components/
-├── file-uploader.tsx     # Main upload component
-├── share-link-dialog.tsx # Share modal with QR & social
-├── social-share.tsx      # Social sharing buttons
-├── header.tsx            # Navigation header
-├── footer.tsx            # Page footer
-├── flash/                # Flash P2P components
-│   ├── index.ts          # Component exports
-│   ├── flash-header.tsx  # Flash page header
-│   ├── mode-selector.tsx # Send/Receive mode selection
-│   ├── file-drop-zone.tsx # File selection for P2P
-│   ├── share-code.tsx    # Room code display
-│   ├── code-input.tsx    # Code entry for receiver
-│   └── transfer-ui.tsx   # Progress & status components
-├── ui/                   # shadcn/ui components
-hooks/
-├── use-p2p.ts            # P2P connection & transfer logic
-├── use-file-upload.ts    # Upload logic
-├── use-download.ts       # Download logic
-├── use-dashboard.ts      # Dashboard data
-├── use-link-info.ts      # Link info fetching
-├── use-quota.ts          # Quota management
-lib/
-├── prisma.ts             # Prisma client instance
-├── auth.ts               # Auth.js configuration
-├── upload-store.ts       # Zustand store (cloud uploads)
-├── p2p-store.ts          # Zustand store (P2P state)
-├── api.ts                # API utilities
-prisma/
-└── schema.prisma         # Database schema
-public/
-├── favicon.svg           # SVG favicon
-└── site.webmanifest      # PWA manifest
-```
-
 ## How Flash P2P Works
 
-1. **Sender** selects a file and gets a 6-character room code
-2. **Receiver** enters the code to connect
-3. **WebRTC** establishes a direct peer-to-peer connection
+1. **Sender** selects a file and gets a 6-character room code + QR code
+2. **Receiver** enters the code manually or scans the QR code
+3. **WebRTC** establishes a direct peer-to-peer connection via 8 STUN servers
 4. **File transfers** directly between devices (no server storage)
-5. **Room expires** after 10 minutes or when transfer completes
+5. **Background support** keeps transfers alive with Wake Lock API & keep-alive pings
+6. **Room expires** after 10 minutes or when transfer completes
 
-> **Note:** Flash works best when both devices are on the same network. Cross-network transfers may be limited by NAT/firewall restrictions on some mobile carriers.
+> **Note:** Flash uses multiple public STUN servers for NAT traversal, including Google, Cloudflare, Twilio, and Mozilla. Works on iOS Safari, Android Chrome, and desktop browsers. Cross-network transfers may be limited by strict NAT/firewall on some mobile carriers.
 
 ## License
 
