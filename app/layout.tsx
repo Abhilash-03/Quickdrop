@@ -47,6 +47,12 @@ export const metadata: Metadata = {
   authors: [{ name: "QuickDrop" }],
   creator: "QuickDrop",
   publisher: "QuickDrop",
+  icons: {
+    icon: [
+      { url: "/icon", type: "image/png", sizes: "32x32" },
+    ],
+    apple: "/apple-icon",
+  },
   robots: {
     index: true,
     follow: true,
