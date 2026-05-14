@@ -1,6 +1,7 @@
 import { useCallback, useRef, useEffect } from "react"
 import Peer, { DataConnection } from "peerjs"
 import { useP2PStore, type P2PFile } from "@/lib/p2p-store"
+import { statsApi } from "@/lib/api"
 
 // Generate a short room code
 function generateRoomCode(): string {
@@ -373,6 +374,11 @@ export function useP2P() {
     const completeMessage: TransferComplete = { type: "complete" }
     conn.send(completeMessage)
     setStatus("completed")
+
+    // Track P2P upload in global stats
+    statsApi.incrementStat("upload").catch(() => {
+      // Silently ignore stats tracking errors
+    })
   }, [setStatus, setProgress])
 
   // Initialize as receiver
@@ -492,6 +498,11 @@ export function useP2P() {
       const blob = new Blob(chunksRef.current)
       setReceivedBlob(blob)
       setStatus("completed")
+
+      // Track P2P download in global stats
+      statsApi.incrementStat("download").catch(() => {
+        // Silently ignore stats tracking errors
+      })
       
       // Auto-trigger download
       const { file } = useP2PStore.getState()

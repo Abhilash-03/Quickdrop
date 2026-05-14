@@ -9,6 +9,7 @@ import { Shield, Clock, Zap, Upload, Link2, Trash2, Cloud, Send, ArrowRight, Use
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { StatsCounter } from "@/components/stats-counter"
 
 // Animation variants
 const fadeInUp = {
@@ -334,6 +335,11 @@ export default function Home() {
                 <Zap className="h-4 w-4" />
                 {activeTab === "drop" ? "10MB max" : "1GB max"}
               </span>
+            </motion.div>
+
+            {/* Global Stats Counter */}
+            <motion.div variants={fadeInUp} className="w-full max-w-xl">
+              <StatsCounter />
             </motion.div>
           </motion.div>
         </section>

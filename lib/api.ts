@@ -112,6 +112,17 @@ export const dashboardApi = {
     api.delete<{ success: boolean; hasPassword: boolean }>(`/share/${id}/password`),
 }
 
+export const statsApi = {
+  getStats: () =>
+    api.get<{
+      totalUploads: number
+      totalDownloads: number
+    }>("/stats"),
+
+  incrementStat: (type: "upload" | "download") =>
+    api.post("/stats", { type }),
+}
+
 // Cloudinary upload with progress
 export const uploadToCloudinary = async (
   file: File,
