@@ -115,6 +115,13 @@ async function processDownload(link: LinkWithFile) {
             data: { downloadCount: { increment: 1 } },
         })
 
+        // Increment global download stats
+        await prisma.stats.upsert({
+            where: { key: "global" },
+            update: { totalDownloads: { increment: 1 } },
+            create: { key: "global", totalDownloads: 1 }
+        })
+
         if(updated.downloadCount >= updated.downloadLimit) {
             // Schedule deletion (don't await to not block response)
             expireAndDelete(link).catch(console.error);

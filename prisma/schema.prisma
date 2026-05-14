@@ -77,3 +77,10 @@ model PasswordResetToken {
     expiresAt DateTime
     createdAt DateTime @default(now())
 }
+
+model Stats {
+    id             String @id @default(auto()) @map("_id") @db.ObjectId
+    key            String @unique @default("global")
+    totalUploads   Int    @default(0)
+    totalDownloads Int    @default(0)
+}

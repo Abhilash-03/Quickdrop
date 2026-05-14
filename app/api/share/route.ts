@@ -150,6 +150,13 @@ export async function POST(req: NextRequest) {
             }
         })
 
+        // Increment global stats for uploads
+        await prisma.stats.upsert({
+            where: { key: "global" },
+            update: { totalUploads: { increment: 1 } },
+            create: { key: "global", totalUploads: 1 }
+        })
+
         return NextResponse.json({ url: `${baseUrl}/d/${share.code}`});
     } catch (error) {
         console.error("Share API error:", error);
